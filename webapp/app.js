@@ -2,9 +2,9 @@
 
 // ── Data ─────────────────────────────────────────────────────
 const EVENTS = [
-  { name: 'Жёлтая овца',    sub: 'ткань',  color: '#E8C97A', img: '/images/sheep.svg'       },
-  { name: 'Синий камень',   sub: 'монеты', color: '#7A9FE8', img: '/images/stone.svg'       },
-  { name: 'Зелёная бумага', sub: 'дерево', color: '#7AE8A3', img: '/images/paper.svg'       },
+  { name: 'Жёлтая овца',    sub: 'ткань',  color: '#E8C97A', img: '/images/Yellow.png'      },
+  { name: 'Синий камень',   sub: 'монеты', color: '#7A9FE8', img: '/images/Blue.png'        },
+  { name: 'Зелёная бумага', sub: 'дерево', color: '#7AE8A3', img: '/images/Green.png'       },
   { name: 'Варвары!',       sub: '',       color: '#E87A7A', img: '/images/barbarians.svg'  },
   { name: 'Варвары!',       sub: '',       color: '#E87A7A', img: '/images/barbarians.svg'  },
   { name: 'Варвары!',       sub: '',       color: '#E87A7A', img: '/images/barbarians.svg'  },
