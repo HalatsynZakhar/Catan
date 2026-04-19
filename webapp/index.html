@@ -17,6 +17,7 @@
       <span class="app-title">КАТАН</span>
       <div class="header-right">
         <span id="roll-count" class="roll-count">Бросков: 0</span>
+        <span id="deck-counter" class="deck-counter"></span>
         <span id="timer" class="timer">&nbsp;</span>
       </div>
     </header>
@@ -29,7 +30,7 @@
       <div class="event-placeholder" id="event-placeholder">
         <span>КАТАН</span>
       </div>
-      <div class="event-overlay" id="event-overlay">
+      <div class="event-overlay">
         <div id="event-name" class="event-name">Нажмите кнопку</div>
         <div id="event-sub" class="event-sub">чтобы начать</div>
       </div>
@@ -41,7 +42,7 @@
         <canvas id="die1" class="die-canvas"></canvas>
         <canvas id="die2" class="die-canvas"></canvas>
       </div>
-      <div class="sum-block">
+      <div class="sum-block" id="sum-block">
         <div class="sum-label">СУММА</div>
         <div id="sum-value" class="sum-value">—</div>
       </div>
@@ -51,6 +52,7 @@
     <div class="btn-row">
       <button id="roll-btn" class="btn-roll" ontouchstart="">БРОСИТЬ КУБИКИ</button>
       <button id="stat-btn" class="btn-stat" ontouchstart="">СТАТ</button>
+      <button id="settings-btn" class="btn-icon" ontouchstart="">⚙</button>
     </div>
 
     <!-- ── History ── -->
@@ -73,6 +75,39 @@
       <div class="divider"></div>
       <div class="modal-body" id="stats-body"></div>
       <button id="btn-close-modal" class="btn-close-modal" ontouchstart="">ЗАКРЫТЬ</button>
+    </div>
+  </div>
+
+  <!-- ── Settings Modal ── -->
+  <div id="settings-modal" class="modal modal-hidden">
+    <div class="modal-inner">
+      <div class="modal-header">
+        <span class="app-title">НАСТРОЙКИ</span>
+        <button id="btn-settings-x" class="btn-x" ontouchstart="">✕</button>
+      </div>
+      <div class="divider"></div>
+      <div class="modal-body">
+
+        <div class="settings-section-label">РЕЖИМ БРОСКА КУБИКОВ</div>
+
+        <div class="mode-option" id="mode-random">
+          <div class="mode-radio" id="radio-random"></div>
+          <div class="mode-text">
+            <div class="mode-title">Полностью случайный</div>
+            <div class="mode-desc">Каждый бросок полностью независим. Возможны серии повторов.</div>
+          </div>
+        </div>
+
+        <div class="mode-option" id="mode-exhaust">
+          <div class="mode-radio" id="radio-exhaust"></div>
+          <div class="mode-text">
+            <div class="mode-title">Режим выбивания</div>
+            <div class="mode-desc">Все 36 комбинаций (1+1…6+6) перемешиваются и выдаются по одной. После 36 бросков — новое перемешивание.</div>
+          </div>
+        </div>
+
+      </div>
+      <button id="btn-close-settings" class="btn-close-modal" ontouchstart="">ЗАКРЫТЬ</button>
     </div>
   </div>
 

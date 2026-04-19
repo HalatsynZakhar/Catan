@@ -77,8 +77,9 @@ html, body {
   gap: 1px;
 }
 
-.roll-count { font-size: 0.75rem; color: var(--dim); }
-.timer      { font-size: 0.7rem;  color: var(--border); min-height: 1em; }
+.roll-count   { font-size: 0.75rem; color: var(--dim); }
+.deck-counter { font-size: 0.7rem;  color: var(--blue); min-height: 1em; }
+.timer        { font-size: 0.7rem;  color: var(--border); min-height: 1em; }
 
 /* ── Divider ── */
 .divider { height: 1px; background: var(--border); flex-shrink: 0; }
@@ -244,6 +245,23 @@ html, body {
 }
 
 .btn-stat:active { background: var(--dim); }
+
+.btn-icon {
+  flex: 0 0 60px;
+  background: var(--border);
+  color: var(--text);
+  border: none;
+  border-radius: var(--radius);
+  height: 60px;
+  font-size: 1.3rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.btn-icon:active { background: var(--dim); }
 
 /* ── History ── */
 .history-card {
@@ -424,6 +442,80 @@ html, body {
 .tbl-total span:first-child { color: var(--dim); font-weight: bold; font-size: 0.58px; letter-spacing: 0.5px; }
 
 .no-data { text-align: center; color: var(--dim); padding: 40px 20px; font-size: 0.9rem; }
+
+/* ── Settings modal content ── */
+.settings-section-label {
+  font-size: 0.6rem;
+  font-weight: bold;
+  color: var(--dim);
+  letter-spacing: 1.5px;
+  margin-bottom: 10px;
+}
+
+.mode-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.mode-option.selected {
+  border-color: var(--blue);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--blue) 25%, transparent);
+}
+
+.mode-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--dim);
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  position: relative;
+}
+
+.mode-radio::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--blue);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.mode-option.selected .mode-radio {
+  border-color: var(--blue);
+}
+
+.mode-option.selected .mode-radio::after {
+  opacity: 1;
+}
+
+.mode-text { flex: 1; min-width: 0; }
+
+.mode-title {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.mode-desc {
+  font-size: 0.72rem;
+  color: var(--dim);
+  line-height: 1.4;
+}
 
 /* ── Responsive ── */
 @media (min-width: 480px) {

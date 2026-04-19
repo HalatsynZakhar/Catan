@@ -74,6 +74,46 @@ let timerRunning = false;
 let timerIval    = null;
 let locked       = false;
 
+// ── Roll mode ─────────────────────────────────────────────────
+let rollMode    = 'random'; // 'random' | 'exhaust'
+let exhaustDeck = [];
+let exhaustIdx  = 0;
+
+function buildDeck() {
+  const deck = [];
+  for (let a = 1; a <= 6; a++)
+    for (let b = 1; b <= 6; b++)
+      deck.push([a, b]);
+  // Fisher-Yates shuffle
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck;
+}
+
+function getNextDice() {
+  if (rollMode === 'random') {
+    return [Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)];
+  }
+  // exhaust mode
+  if (exhaustIdx >= exhaustDeck.length) {
+    exhaustDeck = buildDeck();
+    exhaustIdx  = 0;
+  }
+  return exhaustDeck[exhaustIdx++];
+}
+
+function updateDeckCounter() {
+  const el = document.getElementById('deck-counter');
+  if (rollMode === 'exhaust') {
+    const left = exhaustDeck.length - exhaustIdx;
+    el.textContent = `выб: ${exhaustDeck.length - left + 1}/36`;
+  } else {
+    el.textContent = '';
+  }
+}
+
 // ── Canvas size: dice are now in a row alongside sum block ───
 const DICE_SIZE = (() => {
   const appW   = Math.min(window.innerWidth, 500) - 24; // minus app padding
@@ -95,6 +135,17 @@ const DICE_SIZE = (() => {
   document.getElementById('btn-x').addEventListener('click', closeStats);
   document.getElementById('btn-close-modal').addEventListener('click', closeStats);
   document.getElementById('stats-modal').addEventListener('click', closeStatsOutside);
+
+  document.getElementById('settings-btn').addEventListener('click', openSettings);
+  document.getElementById('btn-settings-x').addEventListener('click', closeSettings);
+  document.getElementById('btn-close-settings').addEventListener('click', closeSettings);
+  document.getElementById('settings-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('settings-modal')) closeSettings();
+  });
+  document.getElementById('mode-random').addEventListener('click', () => setMode('random'));
+  document.getElementById('mode-exhaust').addEventListener('click', () => setMode('exhaust'));
+
+  updateSettingsUI();
 })();
 
 // ── Dice drawing ──────────────────────────────────────────────
@@ -191,10 +242,10 @@ function roll() {
   if (locked) return;
   locked = true;
 
-  const event = EVENTS[Math.floor(Math.random() * EVENTS.length)];
-  const d1    = Math.ceil(Math.random() * 6);
-  const d2    = Math.ceil(Math.random() * 6);
-  const total = d1 + d2;
+  const event    = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+  const [d1, d2] = getNextDice();
+  const total    = d1 + d2;
+  if (rollMode === 'exhaust') updateDeckCounter();
 
   const elapsed = stopTimer();
   if (elapsed !== null) totalThink += elapsed;
@@ -253,6 +304,33 @@ function updateEventUI(event, d2, total) {
   sumEl.textContent       = String(total);
   sumEl.style.color       = event.color;
   sumBlock.style.borderColor = event.color;
+}
+
+// ── Settings ──────────────────────────────────────────────────
+function openSettings() {
+  updateSettingsUI();
+  document.getElementById('settings-modal').classList.remove('modal-hidden');
+}
+
+function closeSettings() {
+  document.getElementById('settings-modal').classList.add('modal-hidden');
+}
+
+function setMode(mode) {
+  rollMode = mode;
+  if (mode === 'exhaust') {
+    exhaustDeck = buildDeck();
+    exhaustIdx  = 0;
+    updateDeckCounter();
+  } else {
+    document.getElementById('deck-counter').textContent = '';
+  }
+  updateSettingsUI();
+}
+
+function updateSettingsUI() {
+  document.getElementById('mode-random').classList.toggle('selected', rollMode === 'random');
+  document.getElementById('mode-exhaust').classList.toggle('selected', rollMode === 'exhaust');
 }
 
 // ── Stats ─────────────────────────────────────────────────────
