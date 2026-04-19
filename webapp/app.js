@@ -2,12 +2,12 @@
 
 // ── Data ─────────────────────────────────────────────────────
 const EVENTS = [
-  { name: 'Жёлтая овца',    sub: 'ткань',  color: '#E8C97A', imgBase: 'Yellow'  },
-  { name: 'Синий камень',   sub: 'монеты', color: '#7A9FE8', imgBase: 'Blue'    },
-  { name: 'Зелёная бумага', sub: 'дерево', color: '#7AE8A3', imgBase: 'Green'   },
-  { name: 'Варвары!',       sub: '',       color: '#E87A7A', imgBase: null       },
-  { name: 'Варвары!',       sub: '',       color: '#E87A7A', imgBase: null       },
-  { name: 'Варвары!',       sub: '',       color: '#E87A7A', imgBase: null       },
+  { name: 'Торговля', sub: 'Ткань (Шерсть)', color: '#E8C97A', imgBase: 'Yellow' },
+  { name: 'Политика', sub: 'Монеты (Руда)',   color: '#7A9FE8', imgBase: 'Blue'   },
+  { name: 'Учёность', sub: 'Бумага (Дерево)', color: '#7AE8A3', imgBase: 'Green'  },
+  { name: 'Варвары!', sub: '',                color: '#E87A7A', imgBase: null      },
+  { name: 'Варвары!', sub: '',                color: '#E87A7A', imgBase: null      },
+  { name: 'Варвары!', sub: '',                color: '#E87A7A', imgBase: null      },
 ];
 
 // Фиксированные цвета кубиков (независимо от события)
@@ -284,13 +284,15 @@ function updateEventUI(event, d2, total) {
   const subEl         = document.getElementById('event-sub');
   const imgEl         = document.getElementById('event-img');
   const sectionEl     = document.getElementById('event-section');
+  const captionEl     = document.getElementById('event-caption');
   const placeholderEl = document.getElementById('event-placeholder');
   const sumEl         = document.getElementById('sum-value');
-  const sumBlock      = document.querySelector('.sum-block');
+  const sumBlock      = document.getElementById('sum-block');
 
   nameEl.textContent = isBarbarians ? 'Варвары!' : `${event.name} (${d2})`;
   nameEl.style.color = event.color;
-  subEl.textContent  = event.sub ? `(${event.sub})` : '\u00A0';
+  subEl.textContent  = event.sub || '\u00A0';
+  subEl.style.color  = event.color;
 
   imgEl.src = event.imgBase
     ? `/images/${event.imgBase}${d2}.png`
@@ -298,11 +300,12 @@ function updateEventUI(event, d2, total) {
   imgEl.classList.add('shown');
   placeholderEl.classList.add('hidden');
 
-  sectionEl.style.borderColor = event.color;
-  sectionEl.style.boxShadow   = `0 0 20px ${event.color}33`;
+  sectionEl.style.borderColor    = event.color;
+  sectionEl.style.boxShadow      = `0 0 20px ${event.color}33`;
+  captionEl.style.borderTopColor = event.color;
 
-  sumEl.textContent       = String(total);
-  sumEl.style.color       = event.color;
+  sumEl.textContent          = String(total);
+  sumEl.style.color          = event.color;
   sumBlock.style.borderColor = event.color;
 }
 
