@@ -113,10 +113,8 @@ function getApiBase() {
   return state.syncServerUrl || defaultSyncBase();
 }
 
-const IMAGE_BASE = `${import.meta.env.BASE_URL || '/'}images/`;
-
 function imageUrl(name) {
-  return `${IMAGE_BASE}${name}`;
+  return new URL(`images/${name}`, document.baseURI).href;
 }
 
 function isDark() {
