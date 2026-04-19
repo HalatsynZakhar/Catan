@@ -532,7 +532,7 @@ function guardStrictSyncAction() {
   return false;
 }
 
-function updateSyncPresence(count, labels = []) {
+function updateSyncPresence(count, labels = [], serverExpected = 0) {
   const prev = state.syncParticipantCount;
   state.syncParticipantCount = Number(count || 0);
   state.syncDeviceLabels = Array.isArray(labels) ? labels : [];
@@ -550,8 +550,13 @@ function updateSyncPresence(count, labels = []) {
     }
   }
 
-  // Expected participants only grows (or shrinks when timer fires)
-  state.syncExpectedParticipants = Math.max(state.syncExpectedParticipants, state.syncParticipantCount);
+  // Sync expected from server only upward: restores after page refresh, detects new joins.
+  // Never decrease here — only the 10s timer decreases it (then pushes the new value to server).
+  state.syncExpectedParticipants = Math.max(
+    state.syncExpectedParticipants,
+    state.syncParticipantCount,
+    Number(serverExpected) || 0,
+  );
 
   // Start 10-second grace period if a peer went missing
   if (state.syncConnected
@@ -570,6 +575,9 @@ function updateSyncPresence(count, labels = []) {
       }
       renderSyncUI();
       updateStrictSyncUiState();
+      // Push the decreased expectedParticipants to server so other clients and
+      // page refreshes see the updated value immediately.
+      pushStateToSync(true).catch(() => {});
     }, 10_000);
   }
 
@@ -760,6 +768,7 @@ async function pushStateToSync(force = false) {
       revision: state.syncRevision,
       gameState: serializeState(),
       force,
+      expectedParticipants: state.syncExpectedParticipants,
     };
     const data = await apiFetch(`/sessions/${state.syncCode}/state`, {
       method: 'PUT',
@@ -767,7 +776,7 @@ async function pushStateToSync(force = false) {
     });
     state.syncRevision = data.revision;
     state.syncNetworkOk = true;
-    updateSyncPresence(data.participantCount, data.deviceLabels);
+    updateSyncPresence(data.participantCount, data.deviceLabels, data.expectedParticipants);
   } catch (error) {
     state.syncNetworkOk = false;
     renderSyncUI();
@@ -793,7 +802,7 @@ async function pullStateFromSync() {
     throw error;
   }
   if (!data) return;
-  updateSyncPresence(data.participantCount, data.deviceLabels);
+  updateSyncPresence(data.participantCount, data.deviceLabels, data.expectedParticipants);
   if (typeof data.revision === 'number' && data.revision >= state.syncRevision) {
     const hasNewState = data.changed !== false && data.revision > state.syncRevision;
     state.syncRevision = data.revision;
@@ -825,8 +834,8 @@ async function createSyncSession() {
   state.syncRevision = data.revision;
   state.syncConnected = true;
   state.syncNetworkOk = true;
-  state.syncExpectedParticipants = Math.max(1, Number(data.participantCount || 1));
-  updateSyncPresence(data.participantCount, data.deviceLabels);
+  state.syncExpectedParticipants = Math.max(1, Number(data.expectedParticipants || data.participantCount || 1));
+  updateSyncPresence(data.participantCount, data.deviceLabels, data.expectedParticipants);
   startSyncPolling();
   showToast(`Код игры создан: ${data.code}`);
   document.getElementById('join-code-input').value = data.code;
@@ -843,9 +852,9 @@ async function joinSyncSession(code) {
   state.syncRevision = data.revision;
   state.syncConnected = true;
   state.syncNetworkOk = true;
-  state.syncExpectedParticipants = Math.max(1, Number(data.participantCount || 1));
+  state.syncExpectedParticipants = Math.max(1, Number(data.expectedParticipants || data.participantCount || 1));
   if (data.gameState) hydrateState(data.gameState);
-  updateSyncPresence(data.participantCount, data.deviceLabels);
+  updateSyncPresence(data.participantCount, data.deviceLabels, data.expectedParticipants);
   startSyncPolling();
   showToast(`Устройство подключено к игре ${normalized}`);
   document.getElementById('join-code-input').value = normalized;

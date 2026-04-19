@@ -118,7 +118,7 @@ export class GameRoom {
     this.state = state;
   }
 
-  async touchDevice(deviceId) {
+  async touchDevice(deviceId, clientExpected = null) {
     const devices = pruneDevices((await this.state.storage.get('devices')) || {});
     if (deviceId) {
       const current = devices[deviceId] || {};
@@ -130,8 +130,19 @@ export class GameRoom {
       };
     }
     await this.state.storage.put('devices', devices);
+
+    const aliveCount = Object.keys(devices).length;
+    const storedExpected = Number((await this.state.storage.get('expectedParticipants')) || 0);
+    let newExpected = Math.max(storedExpected, aliveCount);
+    if (typeof clientExpected === 'number' && Number.isFinite(clientExpected)
+        && clientExpected >= aliveCount && clientExpected < newExpected) {
+      newExpected = clientExpected;
+    }
+    if (newExpected !== storedExpected) await this.state.storage.put('expectedParticipants', newExpected);
+
     return {
-      participantCount: Object.keys(devices).length,
+      participantCount: aliveCount,
+      expectedParticipants: newExpected,
       deviceLabels: Object.values(devices).map(item => item.label).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ru')),
     };
   }
@@ -139,8 +150,13 @@ export class GameRoom {
   async participantCount() {
     const devices = pruneDevices((await this.state.storage.get('devices')) || {});
     await this.state.storage.put('devices', devices);
+    const aliveCount = Object.keys(devices).length;
+    const storedExpected = Number((await this.state.storage.get('expectedParticipants')) || 0);
+    const expected = Math.max(storedExpected, aliveCount);
+    if (expected !== storedExpected) await this.state.storage.put('expectedParticipants', expected);
     return {
-      participantCount: Object.keys(devices).length,
+      participantCount: aliveCount,
+      expectedParticipants: expected,
       deviceLabels: Object.values(devices).map(item => item.label).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ru')),
     };
   }
@@ -187,7 +203,8 @@ export class GameRoom {
 
     if (url.pathname === '/update' && request.method === 'PUT') {
       const body = await request.json().catch(() => ({}));
-      const presence = await this.touchDevice(body.deviceId);
+      const clientExpected = typeof body.expectedParticipants === 'number' ? body.expectedParticipants : null;
+      const presence = await this.touchDevice(body.deviceId, clientExpected);
       const force = Boolean(body.force);
       const clientRevision = Number(body.revision || 0);
 
