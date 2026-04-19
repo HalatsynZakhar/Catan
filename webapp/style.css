@@ -172,6 +172,23 @@ button, input { font: inherit; }
 
 .divider { height: 1px; background: var(--border); flex-shrink: 0; }
 
+.sync-banner {
+  align-self: flex-start;
+  background: rgba(26, 72, 152, 0.18);
+  border: 1px solid rgba(122, 159, 232, 0.4);
+  color: var(--blue);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.66rem;
+  font-weight: bold;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+
+.sync-banner-hidden {
+  display: none;
+}
+
 .event-section {
   display: flex;
   flex-direction: column;
@@ -459,6 +476,28 @@ button, input { font: inherit; }
 }
 
 .modal-hidden { display: none; }
+
+.toast-stack {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 200;
+  pointer-events: none;
+}
+
+.toast {
+  background: rgba(19, 19, 31, 0.94);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+}
 
 .modal-inner {
   background: var(--bg);

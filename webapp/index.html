@@ -30,6 +30,8 @@
       </div>
     </header>
 
+    <div id="sync-banner" class="sync-banner sync-banner-hidden"></div>
+
     <div class="divider"></div>
 
     <div id="event-section" class="event-section">
@@ -154,6 +156,13 @@
         <div class="settings-section-label top-gap">СИНХРОНИЗАЦИЯ</div>
         <div class="sync-card">
           <div id="sync-status" class="mode-desc">Не подключено</div>
+          <label class="toggle-row" for="simultaneous-toggle">
+            <div>
+              <div class="mode-title">Одновременный режим</div>
+              <div class="mode-desc">Если устройств несколько, анимация броска запускается одновременно на всех.</div>
+            </div>
+            <input id="simultaneous-toggle" class="toggle-input" type="checkbox">
+          </label>
           <div class="sync-row">
             <button id="create-sync-btn" class="small-action-btn" ontouchstart="">Создать код</button>
             <button id="leave-sync-btn" class="small-action-btn muted-action-btn" ontouchstart="">Отключиться</button>
@@ -220,6 +229,7 @@
     </div>
   </div>
 
+  <div id="toast-stack" class="toast-stack"></div>
   <script type="module" src="app.js"></script>
 </body>
 </html>

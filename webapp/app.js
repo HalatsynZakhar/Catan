@@ -109,6 +109,11 @@ const state = {
   syncPollIval: null,
   syncRevision: 0,
   syncBusy: false,
+  syncParticipantCount: 0,
+  syncDeviceLabels: [],
+  simultaneousMode: true,
+  pendingCue: null,
+  cueTimeout: null,
 };
 
 function defaultSyncBase() {
@@ -121,6 +126,16 @@ function getApiBase() {
 
 function imageUrl(name) {
   return new URL(`images/${name}`, document.baseURI).href;
+}
+
+function showToast(message) {
+  const stack = document.getElementById('toast-stack');
+  if (!stack) return;
+  const item = document.createElement('div');
+  item.className = 'toast';
+  item.textContent = message;
+  stack.appendChild(item);
+  setTimeout(() => item.remove(), 2400);
 }
 
 function isDark() {
@@ -363,6 +378,12 @@ function setBarbarianTracking(enabled) {
   pushStateToSync().catch(() => {});
 }
 
+function setSimultaneousMode(enabled) {
+  state.simultaneousMode = enabled;
+  refreshSettingsUI();
+  pushStateToSync().catch(() => {});
+}
+
 function setBarbarianPosition(position) {
   state.barbarianPosition = position;
   renderHistory();
@@ -403,6 +424,47 @@ function renderSyncUI() {
   if (status) status.textContent = syncStatusText();
   const leaveBtn = document.getElementById('leave-sync-btn');
   if (leaveBtn) leaveBtn.disabled = !state.syncConnected;
+  const banner = document.getElementById('sync-banner');
+  if (banner) {
+    const show = state.syncConnected && state.syncParticipantCount > 1;
+    banner.classList.toggle('sync-banner-hidden', !show);
+    if (show) {
+      const labels = state.syncDeviceLabels.length ? state.syncDeviceLabels.join(', ') : `${state.syncParticipantCount}`;
+      banner.textContent = `Синхронизировано: ${labels}`;
+    }
+  }
+}
+
+function updateSyncPresence(count, labels = []) {
+  const prev = state.syncParticipantCount;
+  state.syncParticipantCount = Number(count || 0);
+  state.syncDeviceLabels = Array.isArray(labels) ? labels : [];
+  if (state.syncConnected && prev > 0 && prev !== state.syncParticipantCount) {
+    showToast(`Устройств в игре: ${state.syncParticipantCount}`);
+  }
+  renderSyncUI();
+}
+
+function scheduleCueIfNeeded() {
+  if (!state.pendingCue || state.pendingCue.type !== 'roll') return false;
+  const cue = state.pendingCue;
+  const lastTurn = state.turns[state.turns.length - 1];
+  if (!lastTurn || cue.turnId !== lastTurn.id) return false;
+
+  const delay = cue.executeAt - Date.now();
+  if (delay <= 0) return false;
+
+  const previousTurn = state.turns.length > 1 ? state.turns[state.turns.length - 2] : null;
+  if (previousTurn) renderEventState(makeEventView(previousTurn));
+  else renderStartEventState();
+
+  document.getElementById('roll-btn').disabled = true;
+  state.locked = true;
+  state.cueTimeout = setTimeout(() => {
+    state.cueTimeout = null;
+    playTurnAnimation(lastTurn);
+  }, delay);
+  return true;
 }
 
 function serializeState() {
@@ -425,6 +487,8 @@ function serializeState() {
     timerSyncedAt: state.timerSyncedAt || Date.now(),
     alchemyDie1: state.alchemyDie1,
     alchemyDie2: state.alchemyDie2,
+    simultaneousMode: state.simultaneousMode,
+    pendingCue: state.pendingCue,
   };
 }
 
@@ -453,6 +517,10 @@ function hydrateState(gameState) {
     ? structuredClone(gameState)
     : JSON.parse(JSON.stringify(gameState)));
   clearTimerInterval();
+  if (state.cueTimeout) {
+    clearTimeout(state.cueTimeout);
+    state.cueTimeout = null;
+  }
 
   state.turns = incoming.turns || [];
   state.rollMode = incoming.rollMode || 'random';
@@ -472,6 +540,8 @@ function hydrateState(gameState) {
   state.timerSyncedAt = incoming.timerSyncedAt || Date.now();
   state.alchemyDie1 = incoming.alchemyDie1 || 1;
   state.alchemyDie2 = incoming.alchemyDie2 || 1;
+  state.simultaneousMode = Boolean(incoming.simultaneousMode);
+  state.pendingCue = incoming.pendingCue || null;
   state.locked = false;
 
   state.lastEventView = state.turns.length ? makeEventView(state.turns[state.turns.length - 1]) : null;
@@ -480,7 +550,9 @@ function hydrateState(gameState) {
 
   if (state.lastEventView) {
     const lastTurn = state.turns[state.turns.length - 1];
-    renderEventState(state.lastEventView);
+    if (!scheduleCueIfNeeded()) {
+      renderEventState(state.lastEventView);
+    }
     renderCounters(lastTurn);
   } else {
     renderStartEventState();
@@ -527,7 +599,7 @@ async function pushStateToSync(force = false) {
       body: JSON.stringify(payload),
     });
     state.syncRevision = data.revision;
-    renderSyncUI();
+    updateSyncPresence(data.participantCount, data.deviceLabels);
   } catch (error) {
     if (String(error.message) === 'revision-conflict') {
       await pullStateFromSync();
@@ -544,7 +616,7 @@ async function pullStateFromSync() {
   if (typeof data.revision === 'number' && data.revision >= state.syncRevision) {
     state.syncRevision = data.revision;
     if (data.gameState) hydrateState(data.gameState);
-    renderSyncUI();
+    updateSyncPresence(data.participantCount, data.deviceLabels);
   }
 }
 
@@ -570,8 +642,9 @@ async function createSyncSession() {
   state.syncCode = data.code;
   state.syncRevision = data.revision;
   state.syncConnected = true;
+  updateSyncPresence(data.participantCount, data.deviceLabels);
   startSyncPolling();
-  renderSyncUI();
+  showToast(`Код игры создан: ${data.code}`);
   document.getElementById('join-code-input').value = data.code;
 }
 
@@ -586,8 +659,9 @@ async function joinSyncSession(code) {
   state.syncRevision = data.revision;
   state.syncConnected = true;
   if (data.gameState) hydrateState(data.gameState);
+  updateSyncPresence(data.participantCount, data.deviceLabels);
   startSyncPolling();
-  renderSyncUI();
+  showToast(`Устройство подключено к игре ${normalized}`);
   document.getElementById('join-code-input').value = normalized;
 }
 
@@ -596,8 +670,11 @@ function leaveSyncSession() {
   state.syncCode = '';
   state.syncRevision = 0;
   state.syncConnected = false;
+  state.syncParticipantCount = 0;
+  state.syncDeviceLabels = [];
   document.getElementById('join-code-input').value = '';
   renderSyncUI();
+  showToast('Синхронизация отключена');
 }
 
 function drawChoiceGrid(containerId, selectedValue, onClick) {
@@ -802,8 +879,7 @@ function rerenderAfterStateChange(lastTurn = null, skipSync = false) {
   if (!skipSync) pushStateToSync().catch(() => {});
 }
 
-function applyTurn(turn) {
-  state.turns.push(turn);
+function playTurnAnimation(turn) {
   const view = makeEventView(turn);
   state.lastEventView = view;
 
@@ -815,8 +891,21 @@ function applyTurn(turn) {
     rerenderAfterStateChange(turn);
     document.getElementById('roll-btn').disabled = false;
     state.locked = false;
+    if (state.pendingCue && state.pendingCue.turnId === turn.id) {
+      if (state.pendingCue.owner === state.deviceId) {
+        state.pendingCue = null;
+        pushStateToSync(true).catch(() => {});
+      } else {
+        state.pendingCue = null;
+      }
+    }
     setTimeout(() => startTimer(true), 80);
   }, 660);
+}
+
+function applyTurn(turn) {
+  state.turns.push(turn);
+  playTurnAnimation(turn);
 }
 
 function roll(options = {}) {
@@ -829,6 +918,22 @@ function roll(options = {}) {
   const eventKey = getNextEvent();
   const [d1, d2] = getNextDice(useAlchemist, options.alchemyDice || null);
   const turn = createTurn({ eventKey, d1, d2, elapsed, alchemist: useAlchemist });
+
+  if (state.syncConnected && state.simultaneousMode && state.syncParticipantCount > 1) {
+    const executeAt = Date.now() + 900;
+    state.turns.push(turn);
+    state.pendingCue = {
+      id: `${turn.id}-cue`,
+      type: 'roll',
+      turnId: turn.id,
+      executeAt,
+      owner: state.deviceId,
+    };
+    pushStateToSync(true).catch(() => {});
+    scheduleCueIfNeeded();
+    return;
+  }
+
   applyTurn(turn);
 }
 
@@ -877,6 +982,7 @@ function refreshSettingsUI() {
   document.getElementById('event-mode-random').classList.toggle('selected', state.eventMode === 'random');
   document.getElementById('event-mode-exhaust').classList.toggle('selected', state.eventMode === 'exhaust');
   document.getElementById('barbarian-toggle').checked = state.barbarianTracking;
+  document.getElementById('simultaneous-toggle').checked = state.simultaneousMode;
   document.querySelectorAll('.time-chip').forEach(btn => {
     btn.classList.toggle('selected', Number(btn.dataset.t) === state.timeLimit);
   });
@@ -1179,6 +1285,7 @@ function init() {
   document.getElementById('event-mode-random').addEventListener('click', () => setEventMode('random'));
   document.getElementById('event-mode-exhaust').addEventListener('click', () => setEventMode('exhaust'));
   document.getElementById('barbarian-toggle').addEventListener('change', e => setBarbarianTracking(e.target.checked));
+  document.getElementById('simultaneous-toggle').addEventListener('change', e => setSimultaneousMode(e.target.checked));
   document.querySelectorAll('.time-chip').forEach(btn => {
     btn.addEventListener('click', () => setTimeLimit(Number(btn.dataset.t)));
   });
