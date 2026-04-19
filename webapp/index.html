@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Катан — Кубики</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── Header ── -->
+    <header class="header">
+      <span class="app-title">КАТАН</span>
+      <div class="header-right">
+        <span id="roll-count" class="roll-count">Бросков: 0</span>
+        <span id="timer" class="timer">&nbsp;</span>
+      </div>
+    </header>
+
+    <div class="divider"></div>
+
+    <!-- ── Event card ── -->
+    <div id="event-card" class="card event-card">
+      <div class="card-label">СОБЫТИЕ</div>
+      <div class="event-body">
+        <div class="event-text-wrap">
+          <div id="event-name" class="event-name">Нажмите кнопку</div>
+          <div id="event-sub" class="event-sub">чтобы начать</div>
+        </div>
+        <div id="event-img-wrap" class="event-img-wrap img-hidden">
+          <img id="event-img" class="event-img" src="" alt="событие">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Dice ── -->
+    <div class="section-label">КУБИКИ</div>
+    <div class="dice-row">
+      <canvas id="die1" class="die-canvas"></canvas>
+      <canvas id="die2" class="die-canvas"></canvas>
+    </div>
+
+    <!-- ── Sum ── -->
+    <div class="card sum-card">
+      <div class="sum-label">СУММА</div>
+      <div id="sum-value" class="sum-value">—</div>
+    </div>
+
+    <!-- ── Buttons ── -->
+    <div class="btn-row">
+      <button id="roll-btn" class="btn-roll" ontouchstart="" onclick="roll()">БРОСИТЬ КУБИКИ</button>
+      <button class="btn-stat" ontouchstart="" onclick="showStats()">СТАТ</button>
+    </div>
+
+    <!-- ── History ── -->
+    <div class="section-label">ИСТОРИЯ</div>
+    <div class="card history-card">
+      <div id="hist-0" class="hist-item">&nbsp;</div>
+      <div id="hist-1" class="hist-item">&nbsp;</div>
+      <div id="hist-2" class="hist-item">&nbsp;</div>
+      <div id="hist-3" class="hist-item">&nbsp;</div>
+    </div>
+
+  </div>
+
+  <!-- ── Stats Modal ── -->
+  <div id="stats-modal" class="modal modal-hidden" onclick="closeStatsOutside(event)">
+    <div class="modal-inner">
+      <div class="modal-header">
+        <span class="app-title">СТАТИСТИКА</span>
+        <button class="btn-x" ontouchstart="" onclick="closeStats()">✕</button>
+      </div>
+      <div class="divider"></div>
+      <div class="modal-body" id="stats-body"></div>
+      <button class="btn-close-modal" ontouchstart="" onclick="closeStats()">ЗАКРЫТЬ</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

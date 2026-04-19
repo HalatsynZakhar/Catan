@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background -->
+  <rect width="200" height="200" fill="#1A0A0A"/>
+
+  <!-- Shield body -->
+  <path d="M100 30 L155 55 L155 115 Q155 155 100 175 Q45 155 45 115 L45 55 Z"
+        fill="#3D0F0F" stroke="#E87A7A" stroke-width="3"/>
+
+  <!-- Shield inner -->
+  <path d="M100 42 L143 63 L143 114 Q143 147 100 164 Q57 147 57 114 L57 63 Z"
+        fill="#2A0808"/>
+
+  <!-- Cross swords -->
+  <!-- Sword 1 (top-left to bottom-right) -->
+  <line x1="68" y1="68" x2="132" y2="132" stroke="#E87A7A" stroke-width="5" stroke-linecap="round"/>
+  <!-- Blade tip 1 -->
+  <polygon points="130,120 140,135 120,140" fill="#E87A7A"/>
+  <!-- Guard 1 -->
+  <line x1="74" y1="86" x2="86" y2="74" stroke="#FF9999" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Sword 2 (top-right to bottom-left) -->
+  <line x1="132" y1="68" x2="68" y2="132" stroke="#E87A7A" stroke-width="5" stroke-linecap="round"/>
+  <!-- Blade tip 2 -->
+  <polygon points="70,120 60,135 80,140" fill="#E87A7A"/>
+  <!-- Guard 2 -->
+  <line x1="126" y1="86" x2="114" y2="74" stroke="#FF9999" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Skull simplified -->
+  <circle cx="100" cy="95" r="14" fill="#E87A7A" opacity="0.85"/>
+  <rect x="92" y="103" width="16" height="9" rx="2" fill="#E87A7A" opacity="0.85"/>
+  <circle cx="95" cy="93" r="3.5" fill="#1A0A0A"/>
+  <circle cx="105" cy="93" r="3.5" fill="#1A0A0A"/>
+  <line x1="94" y1="105" x2="94" y2="112" stroke="#1A0A0A" stroke-width="2"/>
+  <line x1="100" y1="103" x2="100" y2="112" stroke="#1A0A0A" stroke-width="2"/>
+  <line x1="106" y1="105" x2="106" y2="112" stroke="#1A0A0A" stroke-width="2"/>
+
+  <!-- Glow border -->
+  <rect width="200" height="200" fill="none" stroke="#E87A7A" stroke-width="3" opacity="0.4"/>
+</svg>

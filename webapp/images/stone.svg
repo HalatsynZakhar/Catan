@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background -->
+  <rect width="200" height="200" fill="#080D1A"/>
+
+  <!-- Coin stack shadow -->
+  <ellipse cx="101" cy="152" rx="52" ry="10" fill="#050810" opacity="0.8"/>
+
+  <!-- Coin 3 (back) -->
+  <ellipse cx="100" cy="148" rx="48" ry="12" fill="#1A2550"/>
+  <ellipse cx="100" cy="140" rx="48" ry="12" fill="#1E2D60"/>
+  <ellipse cx="100" cy="140" rx="44" ry="9"  fill="#243570"/>
+
+  <!-- Coin 2 (middle) -->
+  <ellipse cx="100" cy="128" rx="48" ry="12" fill="#1A2550"/>
+  <ellipse cx="100" cy="120" rx="48" ry="12" fill="#263880"/>
+  <ellipse cx="100" cy="120" rx="44" ry="9"  fill="#2C428A"/>
+
+  <!-- Coin 1 (front/top) -->
+  <ellipse cx="100" cy="108" rx="48" ry="12" fill="#1A2550"/>
+  <ellipse cx="100" cy="98"  rx="48" ry="12" fill="#3050AA"/>
+  <ellipse cx="100" cy="98"  rx="44" ry="9"  fill="#3A5ABB"/>
+
+  <!-- Coin face details -->
+  <circle cx="100" cy="98" r="30" fill="none" stroke="#7A9FE8" stroke-width="2" opacity="0.5"/>
+  <circle cx="100" cy="98" r="20" fill="none" stroke="#7A9FE8" stroke-width="1.5" opacity="0.4"/>
+  <!-- Star/gem on coin -->
+  <polygon points="100,80 104,92 117,92 107,100 110,113 100,105 90,113 93,100 83,92 96,92"
+           fill="#7A9FE8" opacity="0.85"/>
+
+  <!-- Shine on top coin -->
+  <ellipse cx="88" cy="90" rx="10" ry="4" fill="#AABFFF" opacity="0.25" transform="rotate(-20 88 90)"/>
+
+  <!-- Gem / blue stone in foreground -->
+  <polygon points="100,30 128,52 128,88 100,110 72,88 72,52"
+           fill="#1A3070" stroke="#7A9FE8" stroke-width="2.5" opacity="0.0"/>
+
+  <!-- Floating gem above coins -->
+  <polygon points="100,28 118,46 118,68 100,82 82,68 82,46"
+           fill="#243A88" stroke="#7A9FE8" stroke-width="2"/>
+  <polygon points="100,34 114,48 114,66 100,76 86,66 86,48"
+           fill="#2E4AA0"/>
+  <!-- Gem facets -->
+  <polygon points="100,34 114,48 100,54" fill="#5070C0" opacity="0.7"/>
+  <polygon points="100,34 86,48 100,54"  fill="#3A58B0" opacity="0.7"/>
+  <polygon points="100,76 114,66 100,60" fill="#3A58B0" opacity="0.5"/>
+  <polygon points="100,76 86,66 100,60"  fill="#4A68C0" opacity="0.5"/>
+  <!-- Gem shine -->
+  <line x1="92" y1="40" x2="98" y2="50" stroke="#AABFFF" stroke-width="1.5" opacity="0.6"/>
+  <circle cx="91" cy="39" r="2" fill="#AABFFF" opacity="0.5"/>
+
+  <!-- Label -->
+  <text x="100" y="178" text-anchor="middle" font-family="monospace" font-size="11"
+        font-weight="bold" fill="#7A9FE8" opacity="0.85" letter-spacing="2">МОНЕТЫ</text>
+
+  <!-- Glow border -->
+  <rect width="200" height="200" fill="none" stroke="#7A9FE8" stroke-width="3" opacity="0.35"/>
+</svg>
