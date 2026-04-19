@@ -3,7 +3,7 @@
   "main": "worker.js",
   "compatibility_date": "2026-04-19",
   "assets": {
-    "directory": "./webapp",
+    "directory": "./webapp/dist",
     "binding": "ASSETS"
   },
   "durable_objects": {
