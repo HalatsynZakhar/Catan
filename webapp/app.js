@@ -115,6 +115,7 @@ const state = {
   syncExpectedParticipants: 0,
   syncDeviceLabels: [],
   syncNetworkOk: true,
+  syncRecoveryTimer: null,
   simultaneousMode: true,
   pendingCue: null,
   cueTimeout: null,
@@ -483,6 +484,7 @@ function syncAvailable() {
 
 function syncStatusText() {
   if (!syncAvailable()) return 'Синхронизация недоступна';
+  if (state.syncRecoveryTimer !== null) return 'Ожидание восстановления устройства...';
   if (isStrictSyncBlocked()) return 'Синхронизация приостановлена';
   if (!state.syncConnected) return 'Не подключено';
   return `Код игры: ${state.syncCode}`;
@@ -533,15 +535,49 @@ function guardStrictSyncAction() {
 function updateSyncPresence(count, labels = []) {
   const prev = state.syncParticipantCount;
   state.syncParticipantCount = Number(count || 0);
-  state.syncExpectedParticipants = Math.max(state.syncExpectedParticipants, state.syncParticipantCount);
   state.syncDeviceLabels = Array.isArray(labels) ? labels : [];
   state.syncNetworkOk = true;
-  if (state.syncConnected && prev > 0 && prev !== state.syncParticipantCount) {
+
+  let specificToast = false;
+
+  // Device came back during grace period — cancel timer
+  if (state.syncRecoveryTimer !== null && state.syncParticipantCount >= state.syncExpectedParticipants) {
+    clearTimeout(state.syncRecoveryTimer);
+    state.syncRecoveryTimer = null;
+    if (state.syncConnected) {
+      showToast('Устройство восстановило соединение. Игра продолжается.');
+      specificToast = true;
+    }
+  }
+
+  // Expected participants only grows (or shrinks when timer fires)
+  state.syncExpectedParticipants = Math.max(state.syncExpectedParticipants, state.syncParticipantCount);
+
+  // Start 10-second grace period if a peer went missing
+  if (state.syncConnected
+    && state.syncExpectedParticipants > 1
+    && state.syncParticipantCount < state.syncExpectedParticipants
+    && state.syncRecoveryTimer === null) {
+    showToast('Одно из устройств пропало. Ожидание восстановления 10 сек...');
+    specificToast = true;
+    state.syncRecoveryTimer = setTimeout(() => {
+      state.syncRecoveryTimer = null;
+      state.syncExpectedParticipants = state.syncParticipantCount;
+      if (state.syncNetworkOk) {
+        showToast('Устройство удалено из игры. Можно продолжать.');
+      } else {
+        showToast('Устройство удалено из игры.');
+      }
+      renderSyncUI();
+      updateStrictSyncUiState();
+    }, 10_000);
+  }
+
+  // Generic count-change toast only when no specific toast was shown
+  if (!specificToast && state.syncConnected && prev > 0 && state.syncParticipantCount !== prev) {
     showToast(`Устройств в игре: ${state.syncParticipantCount}`);
   }
-  if (state.syncConnected && state.syncExpectedParticipants > 1 && state.syncParticipantCount < state.syncExpectedParticipants) {
-    showToast('Одно из устройств пропало. Игра поставлена на паузу до восстановления синхронизации.');
-  }
+
   renderSyncUI();
   updateStrictSyncUiState();
 }
@@ -817,6 +853,10 @@ async function joinSyncSession(code) {
 
 function leaveSyncSession() {
   stopSyncPolling();
+  if (state.syncRecoveryTimer !== null) {
+    clearTimeout(state.syncRecoveryTimer);
+    state.syncRecoveryTimer = null;
+  }
   state.syncCode = '';
   state.syncRevision = 0;
   state.syncConnected = false;
