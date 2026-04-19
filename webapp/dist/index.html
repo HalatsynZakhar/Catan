@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Катан — Кубики</title>
-  <script type="module" crossorigin src="/assets/index-CdrvBvxA.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-JYPvyKsE.css">
+  <script type="module" crossorigin src="/assets/index-Bntb5kLs.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CIDO8CXL.css">
 </head>
 <body>
   <div id="app">
@@ -183,7 +183,12 @@
         </div>
 
         <div class="settings-section-label top-gap">ПАРТИЯ</div>
+        <div class="party-actions">
+          <button id="download-log-btn" class="small-action-btn" ontouchstart="">Скачать лог игры</button>
+          <button id="continue-game-btn" class="small-action-btn muted-action-btn" ontouchstart="">Продолжить игру</button>
+        </div>
         <button id="new-game-btn" class="danger-action-btn" ontouchstart="">Новая игра</button>
+        <input id="continue-game-input" type="file" accept=".txt,text/plain" hidden>
       </div>
       <button id="btn-close-settings" class="btn-close-modal" ontouchstart="">ЗАКРЫТЬ</button>
     </div>

@@ -796,12 +796,90 @@ function renderBarbarianPositionGrid() {
 function turnDescription(turn) {
   const event = EVENT_DEFS[turn.eventKey];
   const label = turn.alchemist ? 'Алхимик' : `#${turn.number}`;
+  const eventLabel = turn.eventKey === 'barbarians'
+    ? event.name
+    : `${event.name} (${turn.d2})`;
   const counted = turn.counted ? '' : ' • без статистики';
   const think = turn.elapsed !== null ? ` • ${turn.elapsed}с` : '';
   const barb = turn.barbarianPositionAfter > 0 && state.barbarianTracking
     ? ` • варвары ${turn.barbarianPositionAfter}`
     : '';
-  return `${label} • ${event.name} • ${turn.d1}+${turn.d2}=${turn.total}${think}${counted}${barb}`;
+  return `${label} • ${eventLabel} • ${turn.d1}+${turn.d2}=${turn.total}${think}${counted}${barb}`;
+}
+
+function hasMeaningfulGameState() {
+  return state.turns.length > 0
+    || state.timeLimit !== 0
+    || state.rollMode !== 'random'
+    || state.eventMode !== 'random'
+    || state.barbarianTracking !== true
+    || state.barbarianPosition !== 0
+    || state.timerStarted
+    || state.timerRunning
+    || state.timerPaused;
+}
+
+function confirmReplacingCurrentGame(message = 'Текущая игра будет потеряна. Продолжить?') {
+  if (!hasMeaningfulGameState()) return true;
+  return window.confirm(message);
+}
+
+function buildGameLogText() {
+  const exportPayload = {
+    app: 'catan-dice',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    gameCode: state.syncCode || '',
+    state: serializeState(),
+  };
+  const historyLines = state.turns.length
+    ? state.turns.map(turn => turnDescription(turn))
+    : ['Ходов пока нет'];
+  return [
+    'Лог игры Catan Cities & Knights',
+    `Экспорт: ${new Date().toLocaleString('ru-RU')}`,
+    `Ходов: ${state.turns.length}`,
+    '',
+    'История:',
+    ...historyLines,
+    '',
+    '--- SNAPSHOT ---',
+    JSON.stringify(exportPayload, null, 2),
+    '',
+  ].join('\n');
+}
+
+function downloadGameLog() {
+  const blob = new Blob([buildGameLogText()], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'log.txt';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('Лог игры скачан');
+}
+
+function extractImportedState(text) {
+  const marker = '--- SNAPSHOT ---';
+  const raw = text.includes(marker) ? text.slice(text.indexOf(marker) + marker.length).trim() : text.trim();
+  const parsed = JSON.parse(raw);
+  if (parsed && typeof parsed === 'object') {
+    if (parsed.state && typeof parsed.state === 'object') return parsed.state;
+    if (parsed.gameState && typeof parsed.gameState === 'object') return parsed.gameState;
+    return parsed;
+  }
+  throw new Error('invalid-log');
+}
+
+async function importGameLog(file) {
+  const text = await file.text();
+  const importedState = extractImportedState(text);
+  hydrateState(importedState);
+  pushStateToSync(true).catch(() => {});
+  showToast('Игра восстановлена из лога');
 }
 
 function renderHistory() {
@@ -1395,6 +1473,7 @@ function init() {
   });
   document.getElementById('join-sync-btn').addEventListener('click', async () => {
     const code = document.getElementById('join-code-input').value;
+    if (!confirmReplacingCurrentGame('Текущая игра не сохранится. Подключиться к игре по коду?')) return;
     try {
       await joinSyncSession(code);
     } catch (error) {
@@ -1402,7 +1481,25 @@ function init() {
     }
   });
   document.getElementById('leave-sync-btn').addEventListener('click', leaveSyncSession);
-  document.getElementById('new-game-btn').addEventListener('click', resetGame);
+  document.getElementById('download-log-btn').addEventListener('click', downloadGameLog);
+  document.getElementById('continue-game-btn').addEventListener('click', () => {
+    if (!confirmReplacingCurrentGame('Текущая игра будет потеряна. Загрузить игру из лог-файла?')) return;
+    document.getElementById('continue-game-input').click();
+  });
+  document.getElementById('continue-game-input').addEventListener('change', async e => {
+    const [file] = e.target.files || [];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      await importGameLog(file);
+    } catch (error) {
+      window.alert('Не удалось загрузить игру из этого файла.');
+    }
+  });
+  document.getElementById('new-game-btn').addEventListener('click', () => {
+    if (!confirmReplacingCurrentGame('Текущая игра будет потеряна. Начать новую игру?')) return;
+    resetGame();
+  });
   document.getElementById('undo-last-btn').addEventListener('click', undoLastTurn);
   document.getElementById('apply-alchemist-btn').addEventListener('click', () => {
     closeModal('alchemist-modal');
