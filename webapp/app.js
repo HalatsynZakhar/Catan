@@ -424,14 +424,14 @@ function renderSyncUI() {
   if (status) status.textContent = syncStatusText();
   const leaveBtn = document.getElementById('leave-sync-btn');
   if (leaveBtn) leaveBtn.disabled = !state.syncConnected;
+  const codeEl = document.getElementById('game-code');
+  if (codeEl) codeEl.textContent = state.syncCode || '------';
   const banner = document.getElementById('sync-banner');
   if (banner) {
-    const show = state.syncConnected && state.syncParticipantCount > 1;
-    banner.classList.toggle('sync-banner-hidden', !show);
-    if (show) {
-      const labels = state.syncDeviceLabels.length ? state.syncDeviceLabels.join(', ') : `${state.syncParticipantCount}`;
-      banner.textContent = `Синхронизировано: ${labels}`;
-    }
+    const labels = state.syncDeviceLabels.length
+      ? state.syncDeviceLabels.join(', ')
+      : `${state.syncParticipantCount}`;
+    banner.textContent = `Устройств в игре: ${state.syncParticipantCount}${state.syncParticipantCount > 0 ? ` • ${labels}` : ''}`;
   }
 }
 
@@ -443,6 +443,15 @@ function updateSyncPresence(count, labels = []) {
     showToast(`Устройств в игре: ${state.syncParticipantCount}`);
   }
   renderSyncUI();
+}
+
+async function ensureAutoSession() {
+  if (state.syncConnected) return;
+  try {
+    await createSyncSession();
+  } catch (error) {
+    renderSyncUI();
+  }
 }
 
 function scheduleCueIfNeeded() {
@@ -545,16 +554,17 @@ function hydrateState(gameState) {
   state.locked = false;
 
   state.lastEventView = state.turns.length ? makeEventView(state.turns[state.turns.length - 1]) : null;
-  renderDie(document.getElementById('die1'), 1, DIE_WHITE(), false);
-  renderDie(document.getElementById('die2'), 1, DIE_RED, true);
-
   if (state.lastEventView) {
     const lastTurn = state.turns[state.turns.length - 1];
+    renderDie(document.getElementById('die1'), lastTurn.d1, DIE_WHITE(), false);
+    renderDie(document.getElementById('die2'), lastTurn.d2, DIE_RED, true);
     if (!scheduleCueIfNeeded()) {
       renderEventState(state.lastEventView);
     }
     renderCounters(lastTurn);
   } else {
+    renderDie(document.getElementById('die1'), 1, DIE_WHITE(), false);
+    renderDie(document.getElementById('die2'), 1, DIE_RED, true);
     renderStartEventState();
     renderCounters();
   }
@@ -1338,6 +1348,7 @@ function init() {
   updateTimerDisplay();
   setTimerStyle();
   renderSyncUI();
+  ensureAutoSession();
 }
 
 function renderAlchemySelectors() {

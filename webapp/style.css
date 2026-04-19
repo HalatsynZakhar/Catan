@@ -71,7 +71,21 @@ button, input { font: inherit; }
   min-width: 0;
 }
 
+.title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
 .app-title { font-size: 1.05rem; font-weight: bold; color: var(--text); letter-spacing: 3px; }
+.game-code {
+  font-size: 0.72rem;
+  font-weight: bold;
+  color: var(--blue);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
 .roll-count { font-size: 0.72rem; color: var(--dim); }
 .deck-counter { font-size: 0.68rem; color: var(--blue); min-height: 0.9em; }
 
@@ -173,16 +187,18 @@ button, input { font: inherit; }
 .divider { height: 1px; background: var(--border); flex-shrink: 0; }
 
 .sync-banner {
-  align-self: flex-start;
+  align-self: center;
+  min-height: 24px;
   background: rgba(26, 72, 152, 0.18);
   border: 1px solid rgba(122, 159, 232, 0.4);
   color: var(--blue);
   border-radius: 999px;
-  padding: 4px 10px;
+  padding: 4px 12px;
   font-size: 0.66rem;
   font-weight: bold;
   letter-spacing: 0.4px;
   flex-shrink: 0;
+  text-align: center;
 }
 
 .sync-banner-hidden {

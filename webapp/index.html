@@ -13,7 +13,10 @@
   <div id="app">
     <header class="header">
       <div class="header-left">
-        <span class="app-title">КАТАН</span>
+        <div class="title-row">
+          <span class="app-title">КАТАН</span>
+          <span id="game-code" class="game-code">------</span>
+        </div>
         <span id="roll-count" class="roll-count">Ходов: 0</span>
         <span id="deck-counter" class="deck-counter">&nbsp;</span>
       </div>
@@ -30,7 +33,7 @@
       </div>
     </header>
 
-    <div id="sync-banner" class="sync-banner sync-banner-hidden"></div>
+    <div id="sync-banner" class="sync-banner">Устройств в игре: 1</div>
 
     <div class="divider"></div>
 
@@ -73,6 +76,8 @@
       <div id="recent-turns" class="recent-turns"></div>
     </div>
   </div>
+
+  <div id="toast-stack" class="toast-stack"></div>
 
   <div id="stats-modal" class="modal modal-hidden">
     <div class="modal-inner">
@@ -229,7 +234,6 @@
     </div>
   </div>
 
-  <div id="toast-stack" class="toast-stack"></div>
   <script type="module" src="app.js"></script>
 </body>
 </html>
