@@ -14,11 +14,14 @@
 
     <!-- ── Header ── -->
     <header class="header">
-      <span class="app-title">КАТАН</span>
-      <div class="header-right">
+      <div class="header-left">
+        <span class="app-title">КАТАН</span>
         <span id="roll-count" class="roll-count">Бросков: 0</span>
         <span id="deck-counter" class="deck-counter"></span>
-        <span id="timer" class="timer">&nbsp;</span>
+      </div>
+      <div class="timer-display" id="timer-display">
+        <div class="timer-lbl">ХОД</div>
+        <div id="timer-value" class="timer-value">—</div>
       </div>
     </header>
 
@@ -88,22 +91,46 @@
       <div class="divider"></div>
       <div class="modal-body">
 
-        <div class="settings-section-label">РЕЖИМ БРОСКА КУБИКОВ</div>
-
+        <div class="settings-section-label">РЕЖИМ КУБИКОВ</div>
         <div class="mode-option" id="mode-random">
-          <div class="mode-radio" id="radio-random"></div>
+          <div class="mode-radio"></div>
           <div class="mode-text">
-            <div class="mode-title">Полностью случайный</div>
-            <div class="mode-desc">Каждый бросок полностью независим. Возможны серии повторов.</div>
+            <div class="mode-title">Случайный</div>
+            <div class="mode-desc">Каждый бросок полностью независим.</div>
+          </div>
+        </div>
+        <div class="mode-option" id="mode-exhaust">
+          <div class="mode-radio"></div>
+          <div class="mode-text">
+            <div class="mode-title">Выбивание — 36 комбинаций</div>
+            <div class="mode-desc">Все 36 комбинаций (1+1…6+6) выпадают за 36 бросков, затем новое перемешивание.</div>
           </div>
         </div>
 
-        <div class="mode-option" id="mode-exhaust">
-          <div class="mode-radio" id="radio-exhaust"></div>
+        <div class="settings-section-label top-gap">РЕЖИМ СОБЫТИЙ</div>
+        <div class="mode-option" id="event-mode-random">
+          <div class="mode-radio"></div>
           <div class="mode-text">
-            <div class="mode-title">Режим выбивания</div>
-            <div class="mode-desc">Все 36 комбинаций (1+1…6+6) перемешиваются и выдаются по одной. После 36 бросков — новое перемешивание.</div>
+            <div class="mode-title">Случайный</div>
+            <div class="mode-desc">Каждое событие случайно (Варвары — 50%).</div>
           </div>
+        </div>
+        <div class="mode-option" id="event-mode-exhaust">
+          <div class="mode-radio"></div>
+          <div class="mode-text">
+            <div class="mode-title">Выбивание — 6 карточек</div>
+            <div class="mode-desc">Все 6 карточек событий перемешиваются и раздаются по одной, затем новое перемешивание.</div>
+          </div>
+        </div>
+
+        <div class="settings-section-label top-gap">ВРЕМЯ НА ХОД</div>
+        <div class="time-options" id="time-options">
+          <button class="time-chip" data-t="0"  ontouchstart="">Выкл</button>
+          <button class="time-chip" data-t="15" ontouchstart="">15с</button>
+          <button class="time-chip" data-t="30" ontouchstart="">30с</button>
+          <button class="time-chip" data-t="45" ontouchstart="">45с</button>
+          <button class="time-chip" data-t="60" ontouchstart="">1 мин</button>
+          <button class="time-chip" data-t="90" ontouchstart="">90с</button>
         </div>
 
       </div>
