@@ -6,7 +6,10 @@ const corsHeaders = {
 };
 
 function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
+  const payload = data && typeof data === 'object' && !Array.isArray(data)
+    ? { ...data, serverNow: Date.now() }
+    : { value: data, serverNow: Date.now() };
+  return new Response(JSON.stringify(payload), {
     status,
     headers: { 'Content-Type': 'application/json; charset=utf-8', ...corsHeaders },
   });

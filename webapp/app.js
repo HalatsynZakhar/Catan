@@ -116,6 +116,8 @@ const state = {
   simultaneousMode: true,
   pendingCue: null,
   cueTimeout: null,
+  lastAnimatedTurnId: '',
+  clockOffsetMs: 0,
 };
 
 function defaultSyncBase() {
@@ -218,8 +220,33 @@ function formatTime(secs) {
   return String(secs);
 }
 
+function syncedNow() {
+  return Date.now() + state.clockOffsetMs;
+}
+
+function updateServerClockOffset(serverNow, requestStartedAt, responseReceivedAt) {
+  if (!Number.isFinite(serverNow)) return;
+  const midpoint = Number.isFinite(requestStartedAt) && Number.isFinite(responseReceivedAt)
+    ? requestStartedAt + ((responseReceivedAt - requestStartedAt) / 2)
+    : Date.now();
+  state.clockOffsetMs = Math.round(serverNow - midpoint);
+}
+
+function syncLiveTimerState() {
+  if (!state.timerStarted || state.alarmActive) return state.timerSecs;
+  if (!state.timerRunning) return state.timerSecs;
+
+  if (state.timeLimit > 0 && state.timerDeadlineMs) {
+    state.timerSecs = Math.max(0, Math.ceil((state.timerDeadlineMs - syncedNow()) / 1000));
+  } else if (state.timerStartedAtMs) {
+    state.timerSecs = Math.max(0, Math.floor((syncedNow() - state.timerStartedAtMs) / 1000));
+  }
+  return state.timerSecs;
+}
+
 function currentTurnElapsed() {
   if (!state.timerStarted && !state.alarmActive) return null;
+  syncLiveTimerState();
   return state.timeLimit > 0 ? state.timeLimit - state.timerSecs : state.timerSecs;
 }
 
@@ -229,6 +256,7 @@ function updateTimerDisplay() {
     el.textContent = '—';
     return;
   }
+  syncLiveTimerState();
   el.textContent = state.timeLimit > 0 ? formatTime(state.timerSecs) : `${state.timerSecs}с`;
 }
 
@@ -259,7 +287,7 @@ function triggerAlarm() {
   state.timerPaused = false;
   state.alarmActive = true;
   state.timerStarted = true;
-  state.timerSyncedAt = Date.now();
+  state.timerSyncedAt = syncedNow();
   state.timerDeadlineMs = 0;
   state.timerStartedAtMs = 0;
   updateTimerDisplay();
@@ -272,23 +300,25 @@ function triggerAlarm() {
 function runTimerTick() {
   clearTimerInterval();
   state.timerIval = setInterval(() => {
+    syncLiveTimerState();
     if (state.timeLimit > 0) {
-      state.timerSecs -= 1;
       if (state.timerSecs <= 0) {
         state.timerSecs = 0;
         updateTimerDisplay();
         triggerAlarm();
         return;
       }
-    } else {
-      state.timerSecs += 1;
     }
     updateTimerDisplay();
     setTimerStyle();
-  }, 1000);
+  }, 250);
 }
 
 function startTimer(reset = true) {
+  startTimerAt(0, reset);
+}
+
+function startTimerAt(anchorMs = 0, reset = true) {
   clearTimerInterval();
   state.alarmActive = false;
   document.getElementById('roll-btn').classList.remove('alarm');
@@ -298,12 +328,13 @@ function startTimer(reset = true) {
   state.timerStarted = true;
   state.timerPaused = false;
   state.timerRunning = true;
-  state.timerSyncedAt = Date.now();
+  state.timerSyncedAt = syncedNow();
+  const baseTime = anchorMs || syncedNow();
   if (state.timeLimit > 0) {
-    state.timerDeadlineMs = Date.now() + state.timerSecs * 1000;
+    state.timerDeadlineMs = baseTime + state.timerSecs * 1000;
     state.timerStartedAtMs = 0;
   } else {
-    state.timerStartedAtMs = Date.now() - state.timerSecs * 1000;
+    state.timerStartedAtMs = baseTime - state.timerSecs * 1000;
     state.timerDeadlineMs = 0;
   }
   updateTimerDisplay();
@@ -315,14 +346,14 @@ function startTimer(reset = true) {
 function pauseTimer() {
   if (!state.timerRunning || state.alarmActive) return;
   if (state.timeLimit > 0 && state.timerDeadlineMs) {
-    state.timerSecs = Math.max(0, Math.ceil((state.timerDeadlineMs - Date.now()) / 1000));
+    state.timerSecs = Math.max(0, Math.ceil((state.timerDeadlineMs - syncedNow()) / 1000));
   } else if (state.timerStartedAtMs) {
-    state.timerSecs = Math.max(0, Math.floor((Date.now() - state.timerStartedAtMs) / 1000));
+    state.timerSecs = Math.max(0, Math.floor((syncedNow() - state.timerStartedAtMs) / 1000));
   }
   clearTimerInterval();
   state.timerRunning = false;
   state.timerPaused = true;
-  state.timerSyncedAt = Date.now();
+  state.timerSyncedAt = syncedNow();
   state.timerDeadlineMs = 0;
   state.timerStartedAtMs = 0;
   setTimerStyle();
@@ -338,12 +369,12 @@ function resumeTimer() {
   if (!state.timerPaused) return;
   state.timerRunning = true;
   state.timerPaused = false;
-  state.timerSyncedAt = Date.now();
+  state.timerSyncedAt = syncedNow();
   if (state.timeLimit > 0) {
-    state.timerDeadlineMs = Date.now() + state.timerSecs * 1000;
+    state.timerDeadlineMs = syncedNow() + state.timerSecs * 1000;
     state.timerStartedAtMs = 0;
   } else {
-    state.timerStartedAtMs = Date.now() - state.timerSecs * 1000;
+    state.timerStartedAtMs = syncedNow() - state.timerSecs * 1000;
     state.timerDeadlineMs = 0;
   }
   setTimerStyle();
@@ -358,7 +389,7 @@ function finishTurnTimer() {
   state.timerPaused = false;
   state.timerStarted = false;
   state.alarmActive = false;
-  state.timerSyncedAt = Date.now();
+  state.timerSyncedAt = syncedNow();
   state.timerDeadlineMs = 0;
   state.timerStartedAtMs = 0;
   document.getElementById('timer-display').classList.remove('warning', 'danger', 'alarm');
@@ -483,9 +514,18 @@ function scheduleCueIfNeeded() {
   const cue = state.pendingCue;
   const lastTurn = state.turns[state.turns.length - 1];
   if (!lastTurn || cue.turnId !== lastTurn.id) return false;
+  if (state.lastAnimatedTurnId === lastTurn.id) return false;
 
-  const delay = cue.executeAt - Date.now();
-  if (delay <= 0) return false;
+  const delay = cue.executeAt - syncedNow();
+  if (delay <= 0) {
+    if (delay > -1800) {
+      document.getElementById('roll-btn').disabled = true;
+      state.locked = true;
+      setTimeout(() => playTurnAnimation(lastTurn), 0);
+      return true;
+    }
+    return false;
+  }
 
   const previousTurn = state.turns.length > 1 ? state.turns[state.turns.length - 2] : null;
   if (previousTurn) renderEventState(makeEventView(previousTurn));
@@ -517,7 +557,7 @@ function serializeState() {
     timerPaused: state.timerPaused,
     timerStarted: state.timerStarted,
     alarmActive: state.alarmActive,
-    timerSyncedAt: state.timerSyncedAt || Date.now(),
+    timerSyncedAt: state.timerSyncedAt || syncedNow(),
     timerDeadlineMs: state.timerDeadlineMs || 0,
     timerStartedAtMs: state.timerStartedAtMs || 0,
     alchemyDie1: state.alchemyDie1,
@@ -532,16 +572,16 @@ function normalizeRemoteTimer(gameState) {
 
   if (gameState.timerRunning) {
     if (gameState.timeLimit > 0 && gameState.timerDeadlineMs) {
-      gameState.timerSecs = Math.max(0, Math.ceil((Number(gameState.timerDeadlineMs) - Date.now()) / 1000));
+      gameState.timerSecs = Math.max(0, Math.ceil((Number(gameState.timerDeadlineMs) - syncedNow()) / 1000));
       if (gameState.timerSecs <= 0) {
         gameState.timerSecs = 0;
         gameState.timerRunning = false;
         gameState.alarmActive = true;
       }
     } else if (gameState.timerStartedAtMs) {
-      gameState.timerSecs = Math.max(0, Math.floor((Date.now() - Number(gameState.timerStartedAtMs)) / 1000));
+      gameState.timerSecs = Math.max(0, Math.floor((syncedNow() - Number(gameState.timerStartedAtMs)) / 1000));
     }
-    gameState.timerSyncedAt = Date.now();
+    gameState.timerSyncedAt = syncedNow();
   }
   return gameState;
 }
@@ -571,7 +611,7 @@ function hydrateState(gameState) {
   state.timerPaused = Boolean(incoming.timerPaused);
   state.timerStarted = Boolean(incoming.timerStarted);
   state.alarmActive = Boolean(incoming.alarmActive);
-  state.timerSyncedAt = incoming.timerSyncedAt || Date.now();
+  state.timerSyncedAt = incoming.timerSyncedAt || syncedNow();
   state.timerDeadlineMs = incoming.timerDeadlineMs || 0;
   state.timerStartedAtMs = incoming.timerStartedAtMs || 0;
   state.alchemyDie1 = incoming.alchemyDie1 || 1;
@@ -579,6 +619,7 @@ function hydrateState(gameState) {
   state.simultaneousMode = Boolean(incoming.simultaneousMode);
   state.pendingCue = incoming.pendingCue || null;
   state.locked = false;
+  state.lastAnimatedTurnId = state.lastAnimatedTurnId || '';
 
   state.lastEventView = state.turns.length ? makeEventView(state.turns[state.turns.length - 1]) : null;
   if (state.lastEventView) {
@@ -611,12 +652,17 @@ function hydrateState(gameState) {
 
 async function apiFetch(path, options = {}) {
   if (!syncAvailable()) throw new Error('sync-unavailable');
+  const requestStartedAt = Date.now();
   const response = await fetch(`${getApiBase()}${path}`, {
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options,
   });
+  const responseReceivedAt = Date.now();
   if (response.status === 204) return null;
   const data = await response.json().catch(() => ({}));
+  if (typeof data.serverNow === 'number') {
+    updateServerClockOffset(data.serverNow, requestStartedAt, responseReceivedAt);
+  }
   if (!response.ok) throw new Error(data.error || 'sync-error');
   return data;
 }
@@ -648,7 +694,7 @@ async function pushStateToSync(force = false) {
 
 async function pullStateFromSync() {
   if (!state.syncConnected || !state.syncCode) return;
-  const data = await apiFetch(`/sessions/${state.syncCode}?revision=${state.syncRevision}`);
+  const data = await apiFetch(`/sessions/${state.syncCode}?revision=${state.syncRevision}&deviceId=${encodeURIComponent(state.deviceId)}`);
   if (!data) return;
   if (typeof data.revision === 'number' && data.revision >= state.syncRevision) {
     state.syncRevision = data.revision;
@@ -659,9 +705,10 @@ async function pullStateFromSync() {
 
 function startSyncPolling() {
   stopSyncPolling();
+  pullStateFromSync().catch(() => {});
   state.syncPollIval = setInterval(() => {
     pullStateFromSync().catch(() => {});
-  }, 1200);
+  }, 350);
 }
 
 function stopSyncPolling() {
@@ -917,8 +964,10 @@ function rerenderAfterStateChange(lastTurn = null, skipSync = false) {
 }
 
 function playTurnAnimation(turn) {
+  state.lastAnimatedTurnId = turn.id;
   const view = makeEventView(turn);
   state.lastEventView = view;
+  const activeCue = state.pendingCue && state.pendingCue.turnId === turn.id ? state.pendingCue : null;
 
   animateDie(document.getElementById('die1'), turn.d1, DIE_WHITE(), false);
   animateDie(document.getElementById('die2'), turn.d2, DIE_RED, true);
@@ -936,7 +985,10 @@ function playTurnAnimation(turn) {
         state.pendingCue = null;
       }
     }
-    setTimeout(() => startTimer(true), 80);
+    setTimeout(() => {
+      if (activeCue && activeCue.timerStartAt) startTimerAt(activeCue.timerStartAt, true);
+      else startTimer(true);
+    }, 80);
   }, 660);
 }
 
@@ -957,13 +1009,14 @@ function roll(options = {}) {
   const turn = createTurn({ eventKey, d1, d2, elapsed, alchemist: useAlchemist });
 
   if (state.syncConnected && state.simultaneousMode && state.syncParticipantCount > 1) {
-    const executeAt = Date.now() + 900;
+    const executeAt = syncedNow() + 1500;
     state.turns.push(turn);
     state.pendingCue = {
       id: `${turn.id}-cue`,
       type: 'roll',
       turnId: turn.id,
       executeAt,
+      timerStartAt: executeAt + 740,
       owner: state.deviceId,
     };
     pushStateToSync(true).catch(() => {});
