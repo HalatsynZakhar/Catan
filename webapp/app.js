@@ -2,13 +2,17 @@
 
 // ── Data ─────────────────────────────────────────────────────
 const EVENTS = [
-  { name: 'Жёлтая овца',    sub: 'ткань',  color: '#E8C97A', img: '/images/Yellow.png'      },
-  { name: 'Синий камень',   sub: 'монеты', color: '#7A9FE8', img: '/images/Blue.png'        },
-  { name: 'Зелёная бумага', sub: 'дерево', color: '#7AE8A3', img: '/images/Green.png'       },
-  { name: 'Варвары!',       sub: '',       color: '#E87A7A', img: '/images/barbarians.svg'  },
-  { name: 'Варвары!',       sub: '',       color: '#E87A7A', img: '/images/barbarians.svg'  },
-  { name: 'Варвары!',       sub: '',       color: '#E87A7A', img: '/images/barbarians.svg'  },
+  { name: 'Жёлтая овца',    sub: 'ткань',  color: '#E8C97A', imgBase: 'Yellow'  },
+  { name: 'Синий камень',   sub: 'монеты', color: '#7A9FE8', imgBase: 'Blue'    },
+  { name: 'Зелёная бумага', sub: 'дерево', color: '#7AE8A3', imgBase: 'Green'   },
+  { name: 'Варвары!',       sub: '',       color: '#E87A7A', imgBase: null       },
+  { name: 'Варвары!',       sub: '',       color: '#E87A7A', imgBase: null       },
+  { name: 'Варвары!',       sub: '',       color: '#E87A7A', imgBase: null       },
 ];
+
+// Фиксированные цвета кубиков (независимо от события)
+const DIE_WHITE = () => isDark() ? '#EEEEFF' : '#1A180E';
+const DIE_RED   = '#E87A7A';
 
 const DOT_POS = {
   1: [[50,50]],
@@ -83,8 +87,8 @@ const DICE_SIZE = (() => {
   const c1 = document.getElementById('die1');
   const c2 = document.getElementById('die2');
   [c1, c2].forEach(c => { c.width = DICE_SIZE; c.height = DICE_SIZE; });
-  renderDie(c1, 1, '#E8C97A', false);
-  renderDie(c2, 1, '#E8C97A', true);
+  renderDie(c1, 1, DIE_WHITE(), false);
+  renderDie(c2, 1, DIE_RED,   true);
 
   document.getElementById('roll-btn').addEventListener('click', roll);
   document.getElementById('stat-btn').addEventListener('click', showStats);
@@ -115,13 +119,12 @@ function renderDie(canvas, value, color, highlight, ox = 0, oy = 0) {
   ctx.restore();
 
   // Face
-  const bc = highlight ? th.highlight : color;
   const bw = highlight ? 3 : 2;
-  rrect(ctx, x0, y0, x1, y1, r, th.face, bc, bw);
+  rrect(ctx, x0, y0, x1, y1, r, th.face, color, bw);
 
   // Dots
   const dr   = Math.max(8, Math.floor(s / 16));
-  const dotC = highlight ? th.highlight : color;
+  const dotC = color;
   (DOT_POS[value] || []).forEach(([px, py]) => {
     const cx = x0 + (x1 - x0) * px / 100;
     const cy = y0 + (y1 - y0) * py / 100;
@@ -211,9 +214,9 @@ function roll() {
     document.getElementById(`hist-${i}`).textContent = history[i] || '\u00A0';
   }
 
-  // Animate
-  animateDie(document.getElementById('die1'), d1, event.color, false);
-  animateDie(document.getElementById('die2'), d2, event.color, true);
+  // Animate — die1 белый, die2 красный (всегда)
+  animateDie(document.getElementById('die1'), d1, DIE_WHITE(), false);
+  animateDie(document.getElementById('die2'), d2, DIE_RED,    true);
 
   setTimeout(() => {
     updateEventUI(event, d2, total);
@@ -238,7 +241,9 @@ function updateEventUI(event, d2, total) {
   nameEl.style.color = event.color;
   subEl.textContent  = event.sub ? `(${event.sub})` : '\u00A0';
 
-  imgEl.src = event.img;
+  imgEl.src = event.imgBase
+    ? `/images/${event.imgBase}${d2}.png`
+    : '/images/barbarians.svg';
   imgEl.classList.add('shown');
   placeholderEl.classList.add('hidden');
 
