@@ -75,23 +75,6 @@ button, input { font: inherit; }
 .roll-count { font-size: 0.72rem; color: var(--dim); }
 .deck-counter { font-size: 0.68rem; color: var(--blue); min-height: 0.9em; }
 
-.turn-brief {
-  flex: 0 0 auto;
-  min-width: 32px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding-top: 2px;
-}
-
-.turn-brief-number {
-  font-size: 0.78rem;
-  font-weight: bold;
-  color: var(--dim);
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
 .timer-cluster {
   display: flex;
   align-items: stretch;
@@ -241,7 +224,7 @@ button, input { font: inherit; }
 
 .event-caption {
   flex-shrink: 0;
-  background: rgba(0, 0, 0, 0.22);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.3));
   border-top: 3px solid var(--border);
   padding: 9px 14px 10px;
   transition: border-color 0.25s ease;
@@ -253,6 +236,16 @@ button, input { font: inherit; }
   color: var(--gold);
   line-height: 1.25;
   transition: color 0.25s ease;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.65),
+    0 0 1px rgba(255, 255, 255, 0.45);
+  display: inline-block;
+  align-self: flex-start;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(10, 10, 16, 0.36);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .event-sub {
@@ -261,6 +254,36 @@ button, input { font: inherit; }
   margin-top: 3px;
   line-height: 1.25;
   transition: color 0.25s ease;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.6),
+    0 0 1px rgba(255, 255, 255, 0.35);
+  display: inline-block;
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(10, 10, 16, 0.26);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+@media (prefers-color-scheme: light) {
+  .event-name {
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+    text-shadow: none;
+  }
+
+  .event-sub {
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+    text-shadow: none;
+  }
+
+  .event-sub.blank-sub {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+  }
 }
 
 .dice-sum-row {
@@ -388,6 +411,42 @@ button, input { font: inherit; }
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.4;
+}
+
+.recent-turns {
+  display: flex;
+  gap: 8px;
+  min-height: 0;
+}
+
+.recent-turn-chip {
+  flex: 1;
+  min-width: 0;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.recent-turn-top {
+  font-size: 0.88rem;
+  font-weight: bold;
+  color: var(--text);
+  line-height: 1;
+}
+
+.recent-turn-bottom {
+  font-size: 0.62rem;
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .modal {
@@ -611,10 +670,6 @@ button, input { font: inherit; }
   padding: 0;
   border: none;
   background: transparent;
-}
-
-.sync-card .custom-time-input {
-  font-size: 0.74rem;
 }
 
 .alchemist-die-note {

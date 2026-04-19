@@ -68,6 +68,13 @@ const EV_COLORS_LIGHT = {
   barbarians: '#AA2020',
 };
 
+const EVENT_UI_COLORS_LIGHT = {
+  trade: '#6B4700',
+  politics: '#10356F',
+  science: '#0E4C24',
+  barbarians: '#7D1111',
+};
+
 const DICE_SIZE = (() => {
   const w = Math.min(window.innerWidth, 520) - 24;
   const side = Math.min(124, Math.max(78, Math.floor(w * 0.24)));
@@ -102,7 +109,6 @@ const state = {
   syncPollIval: null,
   syncRevision: 0,
   syncBusy: false,
-  syncServerUrl: localStorage.getItem('catan-sync-server') || '',
 };
 
 function defaultSyncBase() {
@@ -110,14 +116,11 @@ function defaultSyncBase() {
 }
 
 function getApiBase() {
-  return state.syncServerUrl || defaultSyncBase();
+  return defaultSyncBase();
 }
 
-const IS_SOURCE_DEPLOY = Boolean(document.querySelector('script[src="app.js"]'));
-
 function imageUrl(name) {
-  const prefix = IS_SOURCE_DEPLOY ? 'public/images' : 'images';
-  return new URL(`${prefix}/${name}`, document.baseURI).href;
+  return new URL(`images/${name}`, document.baseURI).href;
 }
 
 function isDark() {
@@ -126,6 +129,11 @@ function isDark() {
 
 function evTableColor(key) {
   return isDark() ? EV_COLORS_DARK[key] : EV_COLORS_LIGHT[key];
+}
+
+function eventUiColor(key, fallback) {
+  if (isDark()) return fallback;
+  return EVENT_UI_COLORS_LIGHT[key] || fallback;
 }
 
 function DIE_WHITE() {
@@ -380,21 +388,14 @@ function sanitizeJoinCode(value) {
   return String(value || '').replace(/\D/g, '').slice(0, 6);
 }
 
-function normalizeSyncServerUrl(value) {
-  const raw = String(value || '').trim();
-  if (!raw) return '';
-  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-  return withProtocol.replace(/\/+$/, '');
-}
-
 function syncAvailable() {
   return Boolean(getApiBase());
 }
 
 function syncStatusText() {
-  if (!syncAvailable()) return 'Укажите адрес sync-сервера.';
+  if (!syncAvailable()) return 'Синхронизация недоступна';
   if (!state.syncConnected) return 'Не подключено';
-  return `Подключено к игре ${state.syncCode} • ревизия ${state.syncRevision}`;
+  return `Код игры: ${state.syncCode}`;
 }
 
 function renderSyncUI() {
@@ -402,8 +403,6 @@ function renderSyncUI() {
   if (status) status.textContent = syncStatusText();
   const leaveBtn = document.getElementById('leave-sync-btn');
   if (leaveBtn) leaveBtn.disabled = !state.syncConnected;
-  const input = document.getElementById('sync-server-input');
-  if (input && document.activeElement !== input) input.value = state.syncServerUrl || defaultSyncBase();
 }
 
 function serializeState() {
@@ -601,14 +600,6 @@ function leaveSyncSession() {
   renderSyncUI();
 }
 
-function setSyncServerUrl(value) {
-  state.syncServerUrl = normalizeSyncServerUrl(value);
-  if (state.syncServerUrl) localStorage.setItem('catan-sync-server', state.syncServerUrl);
-  else localStorage.removeItem('catan-sync-server');
-  leaveSyncSession();
-  renderSyncUI();
-}
-
 function drawChoiceGrid(containerId, selectedValue, onClick) {
   const container = document.getElementById(containerId);
   container.innerHTML = '';
@@ -647,10 +638,18 @@ function turnDescription(turn) {
 }
 
 function renderHistory() {
-  const recent = [...state.turns].slice(-4).reverse();
-  for (let i = 0; i < 4; i++) {
-    document.getElementById(`hist-${i}`).textContent = recent[i] ? turnDescription(recent[i]) : '\u00A0';
-  }
+  const recentTurnsEl = document.getElementById('recent-turns');
+  const recent = [...state.turns].slice(-3).reverse();
+  recentTurnsEl.innerHTML = recent.length
+    ? recent.map(turn => {
+      const event = EVENT_DEFS[turn.eventKey];
+      const eventLabel = turn.eventKey === 'barbarians' ? 'Варв' : event.name.slice(0, 4);
+      return `<div class="recent-turn-chip">
+        <div class="recent-turn-top">${turn.d1}+${turn.d2}</div>
+        <div class="recent-turn-bottom">${eventLabel}</div>
+      </div>`;
+    }).join('')
+    : '<div class="no-data">Нет ходов</div>';
   const barbMeta = state.barbarianTracking
     ? `Варвары: ${state.barbarianPosition === 0 ? 'старт' : state.barbarianPosition}`
     : 'Варвары: выкл';
@@ -672,18 +671,6 @@ function renderHistoryModal() {
 
 function renderRollCount() {
   document.getElementById('roll-count').textContent = `Ходов: ${state.turns.length}`;
-}
-
-function renderTurnBrief() {
-  const numberEl = document.getElementById('turn-brief-number');
-  const lastTurn = state.turns[state.turns.length - 1];
-
-  if (!lastTurn) {
-    numberEl.textContent = '—';
-    return;
-  }
-
-  numberEl.textContent = String(lastTurn.number);
 }
 
 function renderCounters(lastTurn = null) {
@@ -720,10 +707,13 @@ function makeEventView(turn) {
 
 function renderEventState(view) {
   const imgEl = document.getElementById('event-img');
+  const subEl = document.getElementById('event-sub');
+  const uiColor = eventUiColor(view.eventKey, view.color);
   document.getElementById('event-name').textContent = view.name;
-  document.getElementById('event-sub').textContent = view.sub;
-  document.getElementById('event-name').style.color = view.color;
-  document.getElementById('event-sub').style.color = view.color;
+  subEl.textContent = view.sub;
+  document.getElementById('event-name').style.color = uiColor;
+  subEl.style.color = uiColor;
+  subEl.classList.toggle('blank-sub', !view.sub || view.sub === '\u00A0');
   imgEl.src = view.image;
   imgEl.classList.add('shown');
   document.getElementById('event-placeholder').classList.add('hidden');
@@ -740,6 +730,7 @@ function renderEventState(view) {
 function renderStartEventState() {
   const imgEl = document.getElementById('event-img');
   if (state.barbarianTracking) {
+    const uiColor = eventUiColor('barbarians', EVENT_DEFS.barbarians.color);
     imgEl.src = state.barbarianPosition > 0
       ? imageUrl(`barbarians${state.barbarianPosition}.png`)
       : imageUrl('barbarians1_start.png');
@@ -747,8 +738,8 @@ function renderStartEventState() {
     document.getElementById('event-placeholder').classList.add('hidden');
     document.getElementById('event-name').textContent = 'Варвары';
     document.getElementById('event-sub').textContent = state.barbarianPosition > 0 ? `Позиция: ${state.barbarianPosition}` : 'Стартовое положение';
-    document.getElementById('event-name').style.color = EVENT_DEFS.barbarians.color;
-    document.getElementById('event-sub').style.color = EVENT_DEFS.barbarians.color;
+    document.getElementById('event-name').style.color = uiColor;
+    document.getElementById('event-sub').style.color = uiColor;
     document.getElementById('event-section').style.borderColor = EVENT_DEFS.barbarians.color;
     document.getElementById('event-section').style.boxShadow = `0 0 20px ${EVENT_DEFS.barbarians.color}33`;
     document.getElementById('event-caption').style.borderTopColor = EVENT_DEFS.barbarians.color;
@@ -796,7 +787,6 @@ function createTurn({ eventKey, d1, d2, elapsed, alchemist }) {
 
 function rerenderAfterStateChange(lastTurn = null, skipSync = false) {
   renderRollCount();
-  renderTurnBrief();
   renderHistory();
   renderCounters(lastTurn);
   refreshSettingsUI();
@@ -1195,9 +1185,6 @@ function init() {
     const raw = Number(document.getElementById('custom-time-input').value);
     setTimeLimit(Number.isFinite(raw) ? raw : 0);
   });
-  document.getElementById('apply-sync-server-btn').addEventListener('click', () => {
-    setSyncServerUrl(document.getElementById('sync-server-input').value);
-  });
   document.getElementById('join-code-input').addEventListener('input', e => {
     e.target.value = sanitizeJoinCode(e.target.value);
   });
@@ -1205,7 +1192,7 @@ function init() {
     try {
       await createSyncSession();
     } catch (error) {
-      window.alert('Не удалось создать код игры. Убедитесь, что страница открыта через сервер.');
+      window.alert('Не удалось создать код игры.');
     }
   });
   document.getElementById('join-sync-btn').addEventListener('click', async () => {
@@ -1236,7 +1223,6 @@ function init() {
   renderAlchemySelectors();
   refreshSettingsUI();
   renderRollCount();
-  renderTurnBrief();
   renderCounters();
   renderHistory();
   renderStartEventState();

@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Катан — Кубики</title>
-  <script type="module" crossorigin src="/assets/index-Dcf74rSI.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-msw1qaZl.css">
+  <script type="module" crossorigin src="/assets/index-CFWnrszw.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-O6CyYuSY.css">
 </head>
 <body>
   <div id="app">
@@ -17,10 +17,6 @@
         <span class="app-title">КАТАН</span>
         <span id="roll-count" class="roll-count">Ходов: 0</span>
         <span id="deck-counter" class="deck-counter">&nbsp;</span>
-      </div>
-
-      <div class="turn-brief">
-        <div id="turn-brief-number" class="turn-brief-number">—</div>
       </div>
 
       <div class="timer-cluster">
@@ -73,10 +69,7 @@
         <span>Последние ходы</span>
         <span id="history-meta" class="history-meta">Варвары: выкл</span>
       </div>
-      <div id="hist-0" class="hist-item">&nbsp;</div>
-      <div id="hist-1" class="hist-item">&nbsp;</div>
-      <div id="hist-2" class="hist-item">&nbsp;</div>
-      <div id="hist-3" class="hist-item">&nbsp;</div>
+      <div id="recent-turns" class="recent-turns"></div>
     </div>
   </div>
 
@@ -162,13 +155,6 @@
         <div class="settings-section-label top-gap">СИНХРОНИЗАЦИЯ</div>
         <div class="sync-card">
           <div id="sync-status" class="mode-desc">Не подключено</div>
-          <label class="custom-time-row sync-join-row" for="sync-server-input">
-            <span class="mode-title">Адрес sync-сервера</span>
-            <div class="custom-time-input-wrap">
-              <input id="sync-server-input" class="custom-time-input" type="text" placeholder="https://site.com/api или http://IP:8787/api">
-              <button id="apply-sync-server-btn" class="small-action-btn" ontouchstart="">Сохранить</button>
-            </div>
-          </label>
           <div class="sync-row">
             <button id="create-sync-btn" class="small-action-btn" ontouchstart="">Создать код</button>
             <button id="leave-sync-btn" class="small-action-btn muted-action-btn" ontouchstart="">Отключиться</button>
@@ -180,7 +166,6 @@
               <button id="join-sync-btn" class="small-action-btn" ontouchstart="">Войти</button>
             </div>
           </label>
-          <div class="mode-desc">Все устройства должны открыть одну и ту же ссылку на сервер игры. После подключения состояние партии синхронизируется между устройствами.</div>
         </div>
 
         <div class="settings-section-label top-gap">ПАРТИЯ</div>
