@@ -643,9 +643,11 @@ function renderHistory() {
   recentTurnsEl.innerHTML = recent.length
     ? recent.map(turn => {
       const event = EVENT_DEFS[turn.eventKey];
-      const eventLabel = turn.eventKey === 'barbarians' ? 'Варв' : event.name.slice(0, 4);
+      const eventLabel = turn.eventKey === 'barbarians'
+        ? 'Варв'
+        : `${event.name.slice(0, 4)} (${turn.d2})`;
       return `<div class="recent-turn-chip">
-        <div class="recent-turn-top">${turn.d1}+${turn.d2}</div>
+        <div class="recent-turn-top">#${turn.number} ${turn.d1}+${turn.d2}</div>
         <div class="recent-turn-bottom">${eventLabel}</div>
       </div>`;
     }).join('')
