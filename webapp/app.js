@@ -70,11 +70,13 @@ let timerRunning = false;
 let timerIval    = null;
 let locked       = false;
 
-// ── Canvas size (calculated once) ────────────────────────────
-const DICE_SIZE = Math.min(
-  Math.floor((Math.min(window.innerWidth, 500) - 24 - 14) / 2),
-  175
-);
+// ── Canvas size: dice are now in a row alongside sum block ───
+const DICE_SIZE = (() => {
+  const appW   = Math.min(window.innerWidth, 500) - 24; // minus app padding
+  const sumW   = Math.max(68, Math.floor(appW * 0.22));  // sum block ~22%
+  const gaps   = 10 + 8;                                  // row-gap + dice-gap
+  return Math.min(Math.floor((appW - sumW - gaps) / 2), 130);
+})();
 
 // ── Init ──────────────────────────────────────────────────────
 (function init() {
@@ -224,28 +226,28 @@ function roll() {
 function updateEventUI(event, d2, total) {
   const isBarbarians = event.name === 'Варвары!';
 
-  const nameEl = document.getElementById('event-name');
-  const subEl  = document.getElementById('event-sub');
-  const imgEl  = document.getElementById('event-img');
-  const wrapEl = document.getElementById('event-img-wrap');
-  const cardEl = document.getElementById('event-card');
-  const sumEl  = document.getElementById('sum-value');
+  const nameEl        = document.getElementById('event-name');
+  const subEl         = document.getElementById('event-sub');
+  const imgEl         = document.getElementById('event-img');
+  const sectionEl     = document.getElementById('event-section');
+  const placeholderEl = document.getElementById('event-placeholder');
+  const sumEl         = document.getElementById('sum-value');
+  const sumBlock      = document.querySelector('.sum-block');
 
   nameEl.textContent = isBarbarians ? 'Варвары!' : `${event.name} (${d2})`;
   nameEl.style.color = event.color;
   subEl.textContent  = event.sub ? `(${event.sub})` : '\u00A0';
-  subEl.style.color  = event.color;
 
   imgEl.src = event.img;
-  wrapEl.classList.remove('img-hidden');
-  wrapEl.style.borderColor = event.color;
-  wrapEl.style.boxShadow   = `0 0 10px ${event.color}44`;
+  imgEl.classList.add('shown');
+  placeholderEl.classList.add('hidden');
 
-  cardEl.style.borderColor = event.color;
-  cardEl.style.boxShadow   = `0 0 18px ${event.color}28`;
+  sectionEl.style.borderColor = event.color;
+  sectionEl.style.boxShadow   = `0 0 20px ${event.color}33`;
 
-  sumEl.textContent  = String(total);
-  sumEl.style.color  = event.color;
+  sumEl.textContent       = String(total);
+  sumEl.style.color       = event.color;
+  sumBlock.style.borderColor = event.color;
 }
 
 // ── Stats ─────────────────────────────────────────────────────

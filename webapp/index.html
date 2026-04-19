@@ -23,31 +23,28 @@
 
     <div class="divider"></div>
 
-    <!-- ── Event card ── -->
-    <div id="event-card" class="card event-card">
-      <div class="card-label">СОБЫТИЕ</div>
-      <div class="event-body">
-        <div class="event-text-wrap">
-          <div id="event-name" class="event-name">Нажмите кнопку</div>
-          <div id="event-sub" class="event-sub">чтобы начать</div>
-        </div>
-        <div id="event-img-wrap" class="event-img-wrap img-hidden">
-          <img id="event-img" class="event-img" src="" alt="событие">
-        </div>
+    <!-- ── Event image (large) ── -->
+    <div id="event-section" class="event-section">
+      <img id="event-img" class="event-img" src="" alt="">
+      <div class="event-placeholder" id="event-placeholder">
+        <span>КАТАН</span>
+      </div>
+      <div class="event-overlay" id="event-overlay">
+        <div id="event-name" class="event-name">Нажмите кнопку</div>
+        <div id="event-sub" class="event-sub">чтобы начать</div>
       </div>
     </div>
 
-    <!-- ── Dice ── -->
-    <div class="section-label">КУБИКИ</div>
-    <div class="dice-row">
-      <canvas id="die1" class="die-canvas"></canvas>
-      <canvas id="die2" class="die-canvas"></canvas>
-    </div>
-
-    <!-- ── Sum ── -->
-    <div class="card sum-card">
-      <div class="sum-label">СУММА</div>
-      <div id="sum-value" class="sum-value">—</div>
+    <!-- ── Dice + Sum row ── -->
+    <div class="dice-sum-row">
+      <div class="dice-pair">
+        <canvas id="die1" class="die-canvas"></canvas>
+        <canvas id="die2" class="die-canvas"></canvas>
+      </div>
+      <div class="sum-block">
+        <div class="sum-label">СУММА</div>
+        <div id="sum-value" class="sum-value">—</div>
+      </div>
     </div>
 
     <!-- ── Buttons ── -->
@@ -57,7 +54,6 @@
     </div>
 
     <!-- ── History ── -->
-    <div class="section-label">ИСТОРИЯ</div>
     <div class="card history-card">
       <div id="hist-0" class="hist-item">&nbsp;</div>
       <div id="hist-1" class="hist-item">&nbsp;</div>
