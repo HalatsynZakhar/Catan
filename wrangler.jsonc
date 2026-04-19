@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "catan-cities-and-knights",
+  "compatibility_date": "2026-04-19",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "webapp"
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+}
