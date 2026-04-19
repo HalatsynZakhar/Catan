@@ -11,23 +11,27 @@
 </head>
 <body>
   <div id="app">
-
-    <!-- ── Header ── -->
     <header class="header">
       <div class="header-left">
         <span class="app-title">КАТАН</span>
-        <span id="roll-count" class="roll-count">Бросков: 0</span>
-        <span id="deck-counter" class="deck-counter"></span>
+        <span id="roll-count" class="roll-count">Ходов: 0</span>
+        <span id="deck-counter" class="deck-counter">&nbsp;</span>
       </div>
-      <div class="timer-display" id="timer-display">
-        <div class="timer-lbl">ХОД</div>
-        <div id="timer-value" class="timer-value">—</div>
+
+      <div class="timer-cluster">
+        <div class="timer-display" id="timer-display">
+          <div class="timer-lbl">ХОД</div>
+          <div id="timer-value" class="timer-value">—</div>
+        </div>
+        <div class="timer-actions">
+          <button id="pause-btn" class="mini-btn" ontouchstart="">ПАУЗА</button>
+          <button id="play-btn" class="mini-btn accent" ontouchstart="">ПЛЕЙ</button>
+        </div>
       </div>
     </header>
 
     <div class="divider"></div>
 
-    <!-- ── Event image (large) ── -->
     <div id="event-section" class="event-section">
       <div class="event-img-wrap">
         <img id="event-img" class="event-img" src="" alt="">
@@ -39,36 +43,40 @@
       </div>
     </div>
 
-    <!-- ── Dice + Sum row ── -->
     <div class="dice-sum-row">
       <div class="dice-pair">
         <canvas id="die1" class="die-canvas"></canvas>
         <canvas id="die2" class="die-canvas"></canvas>
       </div>
+
       <div class="sum-block" id="sum-block">
         <div class="sum-label">СУММА</div>
         <div id="sum-value" class="sum-value">—</div>
+        <div id="combo-counter" class="combo-counter">1/36: —</div>
       </div>
+
+      <button id="alchemist-btn" class="btn-alchemist" ontouchstart="">Алхимик</button>
     </div>
 
-    <!-- ── Buttons ── -->
     <div class="btn-row">
       <button id="roll-btn" class="btn-roll" ontouchstart="">БРОСИТЬ КУБИКИ</button>
       <button id="stat-btn" class="btn-stat" ontouchstart="">СТАТ</button>
+      <button id="history-btn" class="btn-stat" ontouchstart="">ИСТ</button>
       <button id="settings-btn" class="btn-icon" ontouchstart="">⚙</button>
     </div>
 
-    <!-- ── History ── -->
     <div class="card history-card">
+      <div class="history-head">
+        <span>Последние ходы</span>
+        <span id="history-meta" class="history-meta">Варвары: выкл</span>
+      </div>
       <div id="hist-0" class="hist-item">&nbsp;</div>
       <div id="hist-1" class="hist-item">&nbsp;</div>
       <div id="hist-2" class="hist-item">&nbsp;</div>
       <div id="hist-3" class="hist-item">&nbsp;</div>
     </div>
-
   </div>
 
-  <!-- ── Stats Modal ── -->
   <div id="stats-modal" class="modal modal-hidden">
     <div class="modal-inner">
       <div class="modal-header">
@@ -81,7 +89,6 @@
     </div>
   </div>
 
-  <!-- ── Settings Modal ── -->
   <div id="settings-modal" class="modal modal-hidden">
     <div class="modal-inner">
       <div class="modal-header">
@@ -90,20 +97,19 @@
       </div>
       <div class="divider"></div>
       <div class="modal-body">
-
         <div class="settings-section-label">РЕЖИМ КУБИКОВ</div>
         <div class="mode-option" id="mode-random">
           <div class="mode-radio"></div>
           <div class="mode-text">
             <div class="mode-title">Случайный</div>
-            <div class="mode-desc">Каждый бросок полностью независим.</div>
+            <div class="mode-desc">Каждый бросок независим.</div>
           </div>
         </div>
         <div class="mode-option" id="mode-exhaust">
           <div class="mode-radio"></div>
           <div class="mode-text">
             <div class="mode-title">Выбивание — 36 комбинаций</div>
-            <div class="mode-desc">Все 36 комбинаций (1+1…6+6) выпадают за 36 бросков, затем новое перемешивание.</div>
+            <div class="mode-desc">Все 36 сочетаний 1+1…6+6 проходят по одному разу, затем новая колода.</div>
           </div>
         </div>
 
@@ -112,20 +118,29 @@
           <div class="mode-radio"></div>
           <div class="mode-text">
             <div class="mode-title">Случайный</div>
-            <div class="mode-desc">Каждое событие случайно (Варвары — 50%).</div>
+            <div class="mode-desc">Каждое событие выбирается случайно.</div>
           </div>
         </div>
         <div class="mode-option" id="event-mode-exhaust">
           <div class="mode-radio"></div>
           <div class="mode-text">
             <div class="mode-title">Выбивание — 6 карточек</div>
-            <div class="mode-desc">Все 6 карточек событий перемешиваются и раздаются по одной, затем новое перемешивание.</div>
+            <div class="mode-desc">Торговля, Политика, Учёность и 3 карты варваров идут по одной до нового перемешивания.</div>
           </div>
         </div>
 
+        <div class="settings-section-label top-gap">ВАРВАРЫ</div>
+        <label class="toggle-row" for="barbarian-toggle">
+          <div>
+            <div class="mode-title">Передвигать варваров</div>
+            <div class="mode-desc">По умолчанию включено. Если отключить, остаётся текущий режим без движения варваров.</div>
+          </div>
+          <input id="barbarian-toggle" class="toggle-input" type="checkbox">
+        </label>
+
         <div class="settings-section-label top-gap">ВРЕМЯ НА ХОД</div>
         <div class="time-options" id="time-options">
-          <button class="time-chip" data-t="0"  ontouchstart="">Выкл</button>
+          <button class="time-chip" data-t="0" ontouchstart="">Выкл</button>
           <button class="time-chip" data-t="15" ontouchstart="">15с</button>
           <button class="time-chip" data-t="30" ontouchstart="">30с</button>
           <button class="time-chip" data-t="45" ontouchstart="">45с</button>
@@ -133,8 +148,63 @@
           <button class="time-chip" data-t="90" ontouchstart="">90с</button>
         </div>
 
+        <label class="custom-time-row" for="custom-time-input">
+          <span class="mode-title">Свое время на ход</span>
+          <div class="custom-time-input-wrap">
+            <input id="custom-time-input" class="custom-time-input" type="number" min="0" step="5" inputmode="numeric" placeholder="сек">
+            <button id="apply-custom-time" class="small-action-btn" ontouchstart="">Применить</button>
+          </div>
+        </label>
+
+        <div class="settings-section-label top-gap">ПАРТИЯ</div>
+        <button id="new-game-btn" class="danger-action-btn" ontouchstart="">Новая игра</button>
       </div>
       <button id="btn-close-settings" class="btn-close-modal" ontouchstart="">ЗАКРЫТЬ</button>
+    </div>
+  </div>
+
+  <div id="history-modal" class="modal modal-hidden">
+    <div class="modal-inner">
+      <div class="modal-header">
+        <span class="app-title">ИСТОРИЯ ХОДОВ</span>
+        <button id="btn-history-x" class="btn-x" ontouchstart="">✕</button>
+      </div>
+      <div class="divider"></div>
+      <div class="modal-body">
+        <div class="settings-section-label">РЕДАКТИРОВАНИЕ СОСТОЯНИЯ</div>
+        <div class="history-controls">
+          <button id="undo-last-btn" class="small-action-btn" ontouchstart="">Удалить последний ход</button>
+        </div>
+
+        <div class="settings-section-label top-gap">ТЕКУЩЕЕ ПОЛОЖЕНИЕ ВАРВАРОВ</div>
+        <div id="barbarian-position-options" class="position-grid"></div>
+
+        <div class="settings-section-label top-gap">ВСЯ ИСТОРИЯ</div>
+        <div id="full-history" class="full-history"></div>
+      </div>
+      <button id="btn-close-history" class="btn-close-modal" ontouchstart="">ЗАКРЫТЬ</button>
+    </div>
+  </div>
+
+  <div id="alchemist-modal" class="modal modal-hidden">
+    <div class="modal-inner">
+      <div class="modal-header">
+        <span class="app-title">АЛХИМИК</span>
+        <button id="btn-alchemist-x" class="btn-x" ontouchstart="">✕</button>
+      </div>
+      <div class="divider"></div>
+      <div class="modal-body">
+        <div class="mode-desc alchemist-note">Выберите значения двух кубиков. Ход выполняется стандартно, но не попадает в общую статистику и не продвигает колоду 36 комбинаций.</div>
+
+        <div class="settings-section-label top-gap">ПЕРВЫЙ КУБИК</div>
+        <div id="alchemy-die1" class="position-grid"></div>
+
+        <div class="settings-section-label top-gap">ВТОРОЙ КУБИК</div>
+        <div id="alchemy-die2" class="position-grid"></div>
+
+        <button id="apply-alchemist-btn" class="btn-roll alchemist-apply" ontouchstart="">Применить алхимика</button>
+      </div>
+      <button id="btn-close-alchemist" class="btn-close-modal" ontouchstart="">ЗАКРЫТЬ</button>
     </div>
   </div>
 

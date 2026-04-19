@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background -->
+  <rect width="200" height="200" fill="#081A0D"/>
+
+  <!-- Log shadow -->
+  <ellipse cx="100" cy="162" rx="58" ry="8" fill="#040D06" opacity="0.8"/>
+
+  <!-- Log 2 (back, rotated) -->
+  <g transform="rotate(-12 100 130)">
+    <rect x="34" y="118" width="132" height="32" rx="16" fill="#1A3A10"/>
+    <!-- Wood grain rings on end -->
+    <ellipse cx="166" cy="134" rx="16" ry="16" fill="#224A14"/>
+    <ellipse cx="166" cy="134" rx="12" ry="12" fill="#1E4210"/>
+    <ellipse cx="166" cy="134" rx="8"  ry="8"  fill="#2A5218"/>
+    <ellipse cx="166" cy="134" rx="4"  ry="4"  fill="#326020"/>
+    <ellipse cx="166" cy="134" rx="1.5" ry="1.5" fill="#3A7025"/>
+    <!-- Bark texture lines -->
+    <line x1="34"  y1="124" x2="152" y2="124" stroke="#2A5018" stroke-width="1" opacity="0.5"/>
+    <line x1="34"  y1="130" x2="152" y2="130" stroke="#1A3A10" stroke-width="1" opacity="0.4"/>
+    <line x1="34"  y1="136" x2="152" y2="136" stroke="#2A5018" stroke-width="1" opacity="0.5"/>
+    <line x1="34"  y1="142" x2="152" y2="142" stroke="#1A3A10" stroke-width="1" opacity="0.4"/>
+  </g>
+
+  <!-- Log 1 (front) -->
+  <rect x="28" y="125" width="136" height="36" rx="18" fill="#1E4012"/>
+  <!-- Wood end cap left -->
+  <ellipse cx="28" cy="143" rx="18" ry="18" fill="#2A5018"/>
+  <ellipse cx="28" cy="143" rx="13" ry="13" fill="#245014"/>
+  <ellipse cx="28" cy="143" rx="9"  ry="9"  fill="#2E6018"/>
+  <ellipse cx="28" cy="143" rx="5"  ry="5"  fill="#387020"/>
+  <ellipse cx="28" cy="143" rx="2"  ry="2"  fill="#448028"/>
+  <!-- Wood end cap right -->
+  <ellipse cx="164" cy="143" rx="18" ry="18" fill="#2A5018"/>
+  <ellipse cx="164" cy="143" rx="13" ry="13" fill="#245014"/>
+  <ellipse cx="164" cy="143" rx="9"  ry="9"  fill="#2E6018"/>
+  <ellipse cx="164" cy="143" rx="5"  ry="5"  fill="#387020"/>
+  <ellipse cx="164" cy="143" rx="2"  ry="2"  fill="#448028"/>
+  <!-- Bark grain lines -->
+  <line x1="28"  y1="132" x2="164" y2="132" stroke="#2E5A18" stroke-width="1.5" opacity="0.5"/>
+  <line x1="28"  y1="138" x2="164" y2="138" stroke="#1A3A0C" stroke-width="1"   opacity="0.4"/>
+  <line x1="28"  y1="148" x2="164" y2="148" stroke="#2E5A18" stroke-width="1.5" opacity="0.5"/>
+  <line x1="28"  y1="155" x2="164" y2="155" stroke="#1A3A0C" stroke-width="1"   opacity="0.4"/>
+
+  <!-- Plank (board) leaning up -->
+  <rect x="72" y="35" width="56" height="110" rx="6" fill="#1E4A12" stroke="#7AE8A3" stroke-width="1.5" opacity="0.9"/>
+  <!-- Plank grain lines -->
+  <line x1="80" y1="45"  x2="120" y2="45"  stroke="#2A6018" stroke-width="1.5" opacity="0.5"/>
+  <line x1="80" y1="58"  x2="120" y2="58"  stroke="#163A0A" stroke-width="1"   opacity="0.4"/>
+  <line x1="80" y1="71"  x2="120" y2="71"  stroke="#2A6018" stroke-width="1.5" opacity="0.5"/>
+  <line x1="80" y1="84"  x2="120" y2="84"  stroke="#163A0A" stroke-width="1"   opacity="0.4"/>
+  <line x1="80" y1="97"  x2="120" y2="97"  stroke="#2A6018" stroke-width="1.5" opacity="0.5"/>
+  <line x1="80" y1="110" x2="120" y2="110" stroke="#163A0A" stroke-width="1"   opacity="0.4"/>
+  <line x1="80" y1="123" x2="120" y2="123" stroke="#2A6018" stroke-width="1.5" opacity="0.5"/>
+  <!-- Knot -->
+  <ellipse cx="100" cy="80" rx="8" ry="6" fill="none" stroke="#2A6018" stroke-width="2" opacity="0.6"/>
+  <ellipse cx="100" cy="80" rx="4" ry="3" fill="#163A0A" opacity="0.5"/>
+  <!-- Plank shine -->
+  <rect x="74" y="37" width="6" height="106" rx="3" fill="#7AE8A3" opacity="0.06"/>
+
+  <!-- Axe chip mark -->
+  <path d="M72 65 Q64 70 72 75" stroke="#7AE8A3" stroke-width="2" fill="none" opacity="0.4"/>
+
+  <!-- Label -->
+  <text x="100" y="186" text-anchor="middle" font-family="monospace" font-size="11"
+        font-weight="bold" fill="#7AE8A3" opacity="0.85" letter-spacing="2">ДЕРЕВО</text>
+
+  <!-- Glow border -->
+  <rect width="200" height="200" fill="none" stroke="#7AE8A3" stroke-width="3" opacity="0.35"/>
+</svg>

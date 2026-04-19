@@ -1,40 +1,116 @@
 'use strict';
 
-// ── Data ─────────────────────────────────────────────────────
-const EVENTS = [
-  { name: 'Торговля', sub: 'Ткань (Шерсть)', color: '#E8C97A', imgBase: 'Yellow' },
-  { name: 'Политика', sub: 'Монеты (Руда)',   color: '#7A9FE8', imgBase: 'Blue'   },
-  { name: 'Учёность', sub: 'Бумага (Дерево)', color: '#7AE8A3', imgBase: 'Green'  },
-  { name: 'Варвары!', sub: '',                color: '#E87A7A', imgBase: null      },
-  { name: 'Варвары!', sub: '',                color: '#E87A7A', imgBase: null      },
-  { name: 'Варвары!', sub: '',                color: '#E87A7A', imgBase: null      },
-];
+const EVENT_DEFS = {
+  trade: {
+    key: 'trade',
+    name: 'Торговля',
+    sub: 'Ткань (Шерсть)',
+    color: '#E8C97A',
+    imgBase: 'Yellow',
+  },
+  politics: {
+    key: 'politics',
+    name: 'Политика',
+    sub: 'Монеты (Руда)',
+    color: '#7A9FE8',
+    imgBase: 'Blue',
+  },
+  science: {
+    key: 'science',
+    name: 'Учёность',
+    sub: 'Бумага (Дерево)',
+    color: '#7AE8A3',
+    imgBase: 'Green',
+  },
+  barbarians: {
+    key: 'barbarians',
+    name: 'Варвары!',
+    sub: '',
+    color: '#E87A7A',
+    imgBase: null,
+  },
+};
+
+const EVENT_POOL = ['trade', 'politics', 'science', 'barbarians', 'barbarians', 'barbarians'];
+
+const EVENT_THEORY = {
+  trade: 16.7,
+  politics: 16.7,
+  science: 16.7,
+  barbarians: 50,
+};
 
 const DOT_POS = {
-  1: [[50,50]],
-  2: [[28,28],[72,72]],
-  3: [[28,28],[50,50],[72,72]],
-  4: [[28,28],[72,28],[28,72],[72,72]],
-  5: [[28,28],[72,28],[50,50],[28,72],[72,72]],
-  6: [[28,24],[72,24],[28,50],[72,50],[28,76],[72,76]],
+  1: [[50, 50]],
+  2: [[28, 28], [72, 72]],
+  3: [[28, 28], [50, 50], [72, 72]],
+  4: [[28, 28], [72, 28], [28, 72], [72, 72]],
+  5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
+  6: [[28, 24], [72, 24], [28, 50], [72, 50], [28, 76], [72, 76]],
 };
 
 const THEORY = {
-  2:2.78,3:5.56,4:8.33,5:11.11,6:13.89,
-  7:16.67,8:13.89,9:11.11,10:8.33,11:5.56,12:2.78,
+  2: 2.78, 3: 5.56, 4: 8.33, 5: 11.11, 6: 13.89,
+  7: 16.67, 8: 13.89, 9: 11.11, 10: 8.33, 11: 5.56, 12: 2.78,
 };
 
-const EV_THEORY = { 'Варвары!':50,'Торговля':16.7,'Политика':16.7,'Учёность':16.7 };
-const EV_COLORS_DARK  = { 'Варвары!':'#E87A7A','Торговля':'#E8C97A','Политика':'#7A9FE8','Учёность':'#7AE8A3' };
-const EV_COLORS_LIGHT = { 'Варвары!':'#AA2020','Торговля':'#9A6D08','Политика':'#1A4898','Учёность':'#156830' };
+const EV_COLORS_DARK = {
+  trade: '#E8C97A',
+  politics: '#7A9FE8',
+  science: '#7AE8A3',
+  barbarians: '#E87A7A',
+};
 
-function isDark() { return window.matchMedia('(prefers-color-scheme: dark)').matches; }
-function evTableColor(n) { return isDark() ? EV_COLORS_DARK[n] : EV_COLORS_LIGHT[n]; }
+const EV_COLORS_LIGHT = {
+  trade: '#9A6D08',
+  politics: '#1A4898',
+  science: '#156830',
+  barbarians: '#AA2020',
+};
 
-const DIE_WHITE = () => isDark() ? '#EEEEFF' : '#1A180E';
-const DIE_RED   = '#E87A7A';
+const DICE_SIZE = (() => {
+  const w = Math.min(window.innerWidth, 520) - 24;
+  const side = Math.min(124, Math.max(78, Math.floor(w * 0.24)));
+  return side;
+})();
 
-// ── Die theme ─────────────────────────────────────────────────
+const state = {
+  locked: false,
+  turns: [],
+  rollMode: 'random',
+  exhaustDeck: [],
+  exhaustIdx: 0,
+  eventMode: 'random',
+  eventDeck: [],
+  eventIdx: 0,
+  timeLimit: 0,
+  barbarianTracking: true,
+  barbarianPosition: 0,
+  lastEventView: null,
+  timerSecs: 0,
+  timerRunning: false,
+  timerPaused: false,
+  timerStarted: false,
+  timerIval: null,
+  alarmActive: false,
+  alchemyDie1: 1,
+  alchemyDie2: 1,
+};
+
+function isDark() {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function evTableColor(key) {
+  return isDark() ? EV_COLORS_DARK[key] : EV_COLORS_LIGHT[key];
+}
+
+function DIE_WHITE() {
+  return isDark() ? '#EEEEFF' : '#1A180E';
+}
+
+const DIE_RED = '#E87A7A';
+
 function dieTheme() {
   return isDark()
     ? { face: '#1A1A2E', shadow: '#050510' }
@@ -43,367 +119,546 @@ function dieTheme() {
 
 function chartPalette() {
   return isDark()
-    ? { bar:'#7A9FE8', theory:'#E87A7A', label:'#EEEEFF', dim:'#5A5A7A', base:'#2A2A40' }
-    : { bar:'#1A4898', theory:'#AA2020', label:'#1A180E', dim:'#7A7260', base:'#C8C2AC' };
+    ? { bar: '#7A9FE8', theory: '#E87A7A', label: '#EEEEFF', dim: '#5A5A7A', base: '#2A2A40' }
+    : { bar: '#1A4898', theory: '#AA2020', label: '#1A180E', dim: '#7A7260', base: '#C8C2AC' };
 }
 
-// ── State ─────────────────────────────────────────────────────
-let rollCount    = 0;
-let sums         = [];
-let history      = [];
-let evCounts     = { 'Торговля':0,'Политика':0,'Учёность':0,'Варвары!':0 };
-let totalThink   = 0;
-let locked       = false;
+function shuffle(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
 
-// ── Timer ─────────────────────────────────────────────────────
-let timeLimit    = 0;     // 0 = count-up (no limit)
-let timerSecs    = 0;
-let timerRunning = false;
-let timerIval    = null;
-let alarmActive  = false;
+function rnd6() {
+  return Math.ceil(Math.random() * 6);
+}
 
-function formatTime(s) {
-  if (s >= 60) return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
-  return String(s);
+function buildDiceDeck() {
+  return shuffle(Array.from({ length: 36 }, (_, i) => [Math.floor(i / 6) + 1, (i % 6) + 1]));
+}
+
+function buildEventDeck() {
+  return shuffle(EVENT_POOL);
+}
+
+function getNextDice(useAlchemist = false, alchemyDice = null) {
+  if (useAlchemist && alchemyDice) return [...alchemyDice];
+  if (state.rollMode === 'random') return [rnd6(), rnd6()];
+  if (state.exhaustIdx >= state.exhaustDeck.length) {
+    state.exhaustDeck = buildDiceDeck();
+    state.exhaustIdx = 0;
+  }
+  return state.exhaustDeck[state.exhaustIdx++];
+}
+
+function getNextEvent() {
+  if (state.eventMode === 'random') {
+    return EVENT_POOL[Math.floor(Math.random() * EVENT_POOL.length)];
+  }
+  if (state.eventIdx >= state.eventDeck.length) {
+    state.eventDeck = buildEventDeck();
+    state.eventIdx = 0;
+  }
+  return state.eventDeck[state.eventIdx++];
+}
+
+function formatTime(secs) {
+  if (secs >= 60) return `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+  return String(secs);
+}
+
+function currentTurnElapsed() {
+  if (!state.timerStarted && !state.alarmActive) return null;
+  return state.timeLimit > 0 ? state.timeLimit - state.timerSecs : state.timerSecs;
 }
 
 function updateTimerDisplay() {
   const el = document.getElementById('timer-value');
-  if (!timerRunning && !alarmActive) { el.textContent = '—'; return; }
-  el.textContent = timeLimit > 0 ? formatTime(timerSecs) : `${timerSecs}с`;
+  if (!state.timerStarted && !state.alarmActive) {
+    el.textContent = '—';
+    return;
+  }
+  el.textContent = state.timeLimit > 0 ? formatTime(state.timerSecs) : `${state.timerSecs}с`;
 }
 
 function setTimerStyle() {
-  const d = document.getElementById('timer-display');
-  d.classList.remove('warning', 'danger', 'alarm');
-  if (alarmActive) { d.classList.add('alarm'); return; }
-  if (timeLimit > 0 && timerRunning) {
-    const pct = timerSecs / timeLimit;
-    if (pct < 0.25)      d.classList.add('danger');
-    else if (pct < 0.5)  d.classList.add('warning');
+  const display = document.getElementById('timer-display');
+  display.classList.remove('warning', 'danger', 'alarm');
+  if (state.alarmActive) {
+    display.classList.add('alarm');
+    return;
+  }
+  if (state.timeLimit > 0 && (state.timerRunning || state.timerPaused)) {
+    const pct = state.timeLimit === 0 ? 1 : state.timerSecs / state.timeLimit;
+    if (pct < 0.25) display.classList.add('danger');
+    else if (pct < 0.5) display.classList.add('warning');
+  }
+}
+
+function clearTimerInterval() {
+  if (state.timerIval) {
+    clearInterval(state.timerIval);
+    state.timerIval = null;
   }
 }
 
 function triggerAlarm() {
-  clearInterval(timerIval); timerIval = null;
-  timerRunning = false; alarmActive = true;
-  setTimerStyle();
+  clearTimerInterval();
+  state.timerRunning = false;
+  state.timerPaused = false;
+  state.alarmActive = true;
+  state.timerStarted = true;
   updateTimerDisplay();
+  setTimerStyle();
   document.getElementById('roll-btn').classList.add('alarm');
-  if (navigator.vibrate) navigator.vibrate([300,100,300,100,500]);
+  if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 500]);
 }
 
-function startTimer() {
-  stopTimer();
-  timerSecs    = timeLimit;  // 0 for count-up, limit for countdown
-  timerRunning = true;
-  alarmActive  = false;
-  updateTimerDisplay();
-  setTimerStyle();
-  timerIval = setInterval(() => {
-    if (timeLimit > 0) {
-      timerSecs--;
-      if (timerSecs <= 0) { timerSecs = 0; updateTimerDisplay(); triggerAlarm(); return; }
+function runTimerTick() {
+  clearTimerInterval();
+  state.timerIval = setInterval(() => {
+    if (state.timeLimit > 0) {
+      state.timerSecs -= 1;
+      if (state.timerSecs <= 0) {
+        state.timerSecs = 0;
+        updateTimerDisplay();
+        triggerAlarm();
+        return;
+      }
     } else {
-      timerSecs++;
+      state.timerSecs += 1;
     }
     updateTimerDisplay();
     setTimerStyle();
   }, 1000);
 }
 
-function stopTimer() {
-  if (timerIval) { clearInterval(timerIval); timerIval = null; }
-  const elapsed = (timerRunning || alarmActive)
-    ? (timeLimit > 0 ? timeLimit - timerSecs : timerSecs)
-    : null;
-  timerRunning = false; alarmActive = false;
-  document.getElementById('timer-display').classList.remove('warning','danger','alarm');
+function startTimer(reset = true) {
+  clearTimerInterval();
+  state.alarmActive = false;
+  document.getElementById('roll-btn').classList.remove('alarm');
+  if (reset || !state.timerStarted) {
+    state.timerSecs = state.timeLimit > 0 ? state.timeLimit : 0;
+  }
+  state.timerStarted = true;
+  state.timerPaused = false;
+  state.timerRunning = true;
+  updateTimerDisplay();
+  setTimerStyle();
+  runTimerTick();
+}
+
+function pauseTimer() {
+  if (!state.timerRunning || state.alarmActive) return;
+  clearTimerInterval();
+  state.timerRunning = false;
+  state.timerPaused = true;
+  setTimerStyle();
+}
+
+function resumeTimer() {
+  if (state.locked || state.alarmActive) return;
+  if (!state.timerStarted) {
+    startTimer(true);
+    return;
+  }
+  if (!state.timerPaused) return;
+  state.timerRunning = true;
+  state.timerPaused = false;
+  setTimerStyle();
+  runTimerTick();
+}
+
+function finishTurnTimer() {
+  const elapsed = currentTurnElapsed();
+  clearTimerInterval();
+  state.timerRunning = false;
+  state.timerPaused = false;
+  state.timerStarted = false;
+  state.alarmActive = false;
+  document.getElementById('timer-display').classList.remove('warning', 'danger', 'alarm');
   document.getElementById('roll-btn').classList.remove('alarm');
   updateTimerDisplay();
   return elapsed;
 }
 
-// ── Roll mode (dice) ──────────────────────────────────────────
-let rollMode    = 'random';
-let exhaustDeck = [];
-let exhaustIdx  = 0;
-
-// ── Event mode ────────────────────────────────────────────────
-let eventMode    = 'random';
-let eventDeck    = [];
-let eventIdx     = 0;
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length-1; i>0; i--) {
-    const j = Math.floor(Math.random()*(i+1));
-    [a[i],a[j]] = [a[j],a[i]];
-  }
-  return a;
-}
-
-function getNextDice() {
-  if (rollMode === 'random') return [rnd6(), rnd6()];
-  if (exhaustIdx >= exhaustDeck.length) {
-    exhaustDeck = shuffle(
-      Array.from({length:36}, (_,i) => [Math.floor(i/6)+1, (i%6)+1])
-    );
-    exhaustIdx = 0;
-  }
-  return exhaustDeck[exhaustIdx++];
-}
-
-function getNextEvent() {
-  if (eventMode === 'random') return EVENTS[Math.floor(Math.random()*EVENTS.length)];
-  if (eventIdx >= eventDeck.length) {
-    eventDeck = shuffle(EVENTS);
-    eventIdx  = 0;
-  }
-  return eventDeck[eventIdx++];
-}
-
-function rnd6() { return Math.ceil(Math.random()*6); }
-
-function updateDeckCounter() {
-  const el = document.getElementById('deck-counter');
-  if (rollMode === 'exhaust') {
-    el.textContent = `кубики: ${exhaustIdx}/36`;
-  } else {
-    el.textContent = '';
-  }
-}
-
-// ── Canvas size ───────────────────────────────────────────────
-const DICE_SIZE = (() => {
-  const w   = Math.min(window.innerWidth, 500) - 24;
-  const sumW = Math.max(68, Math.floor(w * 0.22));
-  return Math.min(Math.floor((w - sumW - 18) / 2), 130);
-})();
-
-// ── Init ──────────────────────────────────────────────────────
-(function init() {
-  ['die1','die2'].forEach(id => {
-    const c = document.getElementById(id);
-    c.width = DICE_SIZE; c.height = DICE_SIZE;
-  });
-  renderDie(document.getElementById('die1'), 1, DIE_WHITE(), false);
-  renderDie(document.getElementById('die2'), 1, DIE_RED,    true);
-
-  document.getElementById('roll-btn').addEventListener('click', roll);
-  document.getElementById('stat-btn').addEventListener('click', showStats);
-  document.getElementById('btn-x').addEventListener('click', closeStats);
-  document.getElementById('btn-close-modal').addEventListener('click', closeStats);
-  document.getElementById('stats-modal').addEventListener('click', e => {
-    if (e.target === document.getElementById('stats-modal')) closeStats();
-  });
-
-  document.getElementById('settings-btn').addEventListener('click', openSettings);
-  document.getElementById('btn-settings-x').addEventListener('click', closeSettings);
-  document.getElementById('btn-close-settings').addEventListener('click', closeSettings);
-  document.getElementById('settings-modal').addEventListener('click', e => {
-    if (e.target === document.getElementById('settings-modal')) closeSettings();
-  });
-
-  // Dice mode
-  document.getElementById('mode-random').addEventListener('click', () => setRollMode('random'));
-  document.getElementById('mode-exhaust').addEventListener('click', () => setRollMode('exhaust'));
-
-  // Event mode
-  document.getElementById('event-mode-random').addEventListener('click', () => setEventMode('random'));
-  document.getElementById('event-mode-exhaust').addEventListener('click', () => setEventMode('exhaust'));
-
-  // Time chips
-  document.querySelectorAll('.time-chip').forEach(btn => {
-    btn.addEventListener('click', () => setTimeLimit(Number(btn.dataset.t)));
-  });
-
-  refreshSettingsUI();
-  updateTimerDisplay();
-})();
-
-// ── Dice drawing ──────────────────────────────────────────────
-function renderDie(canvas, value, color, highlight, ox=0, oy=0) {
-  const ctx = canvas.getContext('2d');
-  const s   = canvas.width;
-  const th  = dieTheme();
-  ctx.clearRect(0,0,s,s);
-  ctx.save(); ctx.translate(ox,oy);
-
-  const pad=8, r=16, x0=pad, y0=pad, x1=s-pad, y1=s-pad;
-
-  ctx.save();
-  ctx.shadowColor='rgba(0,0,0,.5)'; ctx.shadowBlur=10;
-  ctx.shadowOffsetX=4; ctx.shadowOffsetY=4;
-  rrect(ctx, x0+4, y0+4, x1+4, y1+4, r, th.shadow);
-  ctx.restore();
-
-  rrect(ctx, x0, y0, x1, y1, r, th.face, color, highlight ? 3 : 2);
-
-  const dr = Math.max(8, Math.floor(s/16));
-  (DOT_POS[value]||[]).forEach(([px,py]) => {
-    const cx = x0+(x1-x0)*px/100, cy = y0+(y1-y0)*py/100;
-    ctx.beginPath(); ctx.arc(cx,cy,dr,0,Math.PI*2);
-    ctx.fillStyle = color; ctx.fill();
-  });
-  ctx.restore();
-}
-
-function rrect(ctx, x0,y0,x1,y1, r, fill, stroke, sw) {
-  ctx.beginPath();
-  ctx.moveTo(x0+r,y0); ctx.lineTo(x1-r,y0); ctx.quadraticCurveTo(x1,y0,x1,y0+r);
-  ctx.lineTo(x1,y1-r); ctx.quadraticCurveTo(x1,y1,x1-r,y1);
-  ctx.lineTo(x0+r,y1); ctx.quadraticCurveTo(x0,y1,x0,y1-r);
-  ctx.lineTo(x0,y0+r); ctx.quadraticCurveTo(x0,y0,x0+r,y0);
-  ctx.closePath();
-  ctx.fillStyle=fill; ctx.fill();
-  if (stroke) { ctx.strokeStyle=stroke; ctx.lineWidth=sw||2; ctx.stroke(); }
-}
-
-function animateDie(canvas, finalVal, color, highlight) {
-  let step=0;
-  function frame() {
-    const amp=Math.max(1,9-step);
-    const v = step===15 ? finalVal : rnd6();
-    const ox=Math.round((Math.random()*2-1)*amp);
-    const oy=Math.round((Math.random()*2-1)*amp);
-    renderDie(canvas, v, color, highlight, ox, oy);
-    step++;
-    if (step<16) setTimeout(frame,35);
-    else renderDie(canvas, finalVal, color, highlight);
-  }
-  frame();
-}
-
-// ── Roll ──────────────────────────────────────────────────────
-function roll() {
-  if (locked) return;
-  locked = true;
-
-  const elapsed = stopTimer();
-  if (elapsed !== null) totalThink += elapsed;
-
-  const event    = getNextEvent();
-  const [d1, d2] = getNextDice();
-  const total    = d1 + d2;
-
-  sums.push(total);
-  evCounts[event.name]++;
-  rollCount++;
-
-  document.getElementById('roll-count').textContent = `Бросков: ${rollCount}`;
-  document.getElementById('roll-btn').disabled = true;
-  updateDeckCounter();
-
-  const think = elapsed !== null ? ` [${elapsed}с]` : '';
-  history.unshift(`#${rollCount}  ${event.name}  ${d1}+${d2}=${total}${think}`);
-  history = history.slice(0,4);
-  for (let i=0;i<4;i++)
-    document.getElementById(`hist-${i}`).textContent = history[i]||'\u00A0';
-
-  animateDie(document.getElementById('die1'), d1, DIE_WHITE(), false);
-  animateDie(document.getElementById('die2'), d2, DIE_RED,    true);
-
-  setTimeout(() => {
-    updateEventUI(event, d2, total);
-    document.getElementById('roll-btn').disabled = false;
-    locked = false;
-    setTimeout(startTimer, 80);
-  }, 660);
-}
-
-function updateEventUI(event, d2, total) {
-  const isBarbarians = event.name === 'Варвары!';
-  document.getElementById('event-name').textContent = isBarbarians ? 'Варвары!' : `${event.name} (${d2})`;
-  document.getElementById('event-name').style.color = event.color;
-  document.getElementById('event-sub').textContent  = event.sub || '\u00A0';
-  document.getElementById('event-sub').style.color  = event.color;
-
-  const imgEl = document.getElementById('event-img');
-  imgEl.src = event.imgBase ? `/images/${event.imgBase}${d2}.png` : '/images/barbarians.svg';
-  imgEl.classList.add('shown');
-  document.getElementById('event-placeholder').classList.add('hidden');
-
-  const sec = document.getElementById('event-section');
-  sec.style.borderColor = event.color;
-  sec.style.boxShadow   = `0 0 20px ${event.color}33`;
-  document.getElementById('event-caption').style.borderTopColor = event.color;
-
-  document.getElementById('sum-value').textContent       = String(total);
-  document.getElementById('sum-value').style.color       = event.color;
-  document.getElementById('sum-block').style.borderColor = event.color;
-}
-
-// ── Settings ──────────────────────────────────────────────────
-function openSettings() {
-  refreshSettingsUI();
-  document.getElementById('settings-modal').classList.remove('modal-hidden');
-}
-function closeSettings() {
-  document.getElementById('settings-modal').classList.add('modal-hidden');
-}
-
 function setRollMode(mode) {
-  rollMode = mode;
-  if (mode === 'exhaust') { exhaustDeck = []; exhaustIdx = 0; }
-  updateDeckCounter();
+  state.rollMode = mode;
+  state.exhaustDeck = [];
+  state.exhaustIdx = 0;
   refreshSettingsUI();
+  renderCounters();
 }
 
 function setEventMode(mode) {
-  eventMode = mode;
-  if (mode === 'exhaust') { eventDeck = []; eventIdx = 0; }
+  state.eventMode = mode;
+  state.eventDeck = [];
+  state.eventIdx = 0;
   refreshSettingsUI();
+  renderCounters();
 }
 
 function setTimeLimit(secs) {
-  timeLimit = secs;
-  stopTimer();
+  state.timeLimit = Math.max(0, secs || 0);
+  finishTurnTimer();
   refreshSettingsUI();
 }
 
-function refreshSettingsUI() {
-  document.getElementById('mode-random').classList.toggle('selected', rollMode==='random');
-  document.getElementById('mode-exhaust').classList.toggle('selected', rollMode==='exhaust');
-  document.getElementById('event-mode-random').classList.toggle('selected', eventMode==='random');
-  document.getElementById('event-mode-exhaust').classList.toggle('selected', eventMode==='exhaust');
-  document.querySelectorAll('.time-chip').forEach(btn => {
-    btn.classList.toggle('selected', Number(btn.dataset.t) === timeLimit);
-  });
+function setBarbarianTracking(enabled) {
+  state.barbarianTracking = enabled;
+  refreshSettingsUI();
+  renderHistory();
+  if (!state.turns.length) {
+    renderStartEventState();
+  } else {
+    state.lastEventView = makeEventView(state.turns[state.turns.length - 1]);
+    renderEventState(state.lastEventView);
+  }
 }
 
-// ── Stats ─────────────────────────────────────────────────────
-function showStats() {
-  document.getElementById('stats-modal').classList.remove('modal-hidden');
-  renderStats();
+function setBarbarianPosition(position) {
+  state.barbarianPosition = position;
+  renderHistory();
+  if (!state.turns.length) {
+    renderStartEventState();
+  } else if (state.lastEventView && state.lastEventView.eventKey === 'barbarians' && state.barbarianTracking) {
+    state.lastEventView.image = `/images/barbarians${position}.png`;
+    renderEventState(state.lastEventView);
+  }
+  renderHistoryModal();
 }
-function closeStats() {
-  document.getElementById('stats-modal').classList.add('modal-hidden');
+
+function openModal(id) {
+  document.getElementById(id).classList.remove('modal-hidden');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.add('modal-hidden');
+}
+
+function drawChoiceGrid(containerId, selectedValue, onClick) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  for (let i = 1; i <= 6; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'position-chip';
+    btn.textContent = String(i);
+    btn.classList.toggle('selected', i === selectedValue);
+    btn.addEventListener('click', () => onClick(i));
+    container.appendChild(btn);
+  }
+}
+
+function renderBarbarianPositionGrid() {
+  const container = document.getElementById('barbarian-position-options');
+  container.innerHTML = '';
+  for (let i = 1; i <= 7; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'position-chip';
+    btn.textContent = String(i);
+    btn.classList.toggle('selected', i === state.barbarianPosition);
+    btn.addEventListener('click', () => setBarbarianPosition(i));
+    container.appendChild(btn);
+  }
+}
+
+function turnDescription(turn) {
+  const event = EVENT_DEFS[turn.eventKey];
+  const label = turn.alchemist ? 'Алхимик' : `#${turn.number}`;
+  const counted = turn.counted ? '' : ' • без статистики';
+  const think = turn.elapsed !== null ? ` • ${turn.elapsed}с` : '';
+  const barb = turn.barbarianPositionAfter > 0 && state.barbarianTracking
+    ? ` • варвары ${turn.barbarianPositionAfter}`
+    : '';
+  return `${label} • ${event.name} • ${turn.d1}+${turn.d2}=${turn.total}${think}${counted}${barb}`;
+}
+
+function renderHistory() {
+  const recent = [...state.turns].slice(-4).reverse();
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`hist-${i}`).textContent = recent[i] ? turnDescription(recent[i]) : '\u00A0';
+  }
+  const barbMeta = state.barbarianTracking
+    ? `Варвары: ${state.barbarianPosition === 0 ? 'старт' : state.barbarianPosition}`
+    : 'Варвары: выкл';
+  document.getElementById('history-meta').textContent = barbMeta;
+}
+
+function renderHistoryModal() {
+  renderBarbarianPositionGrid();
+  const fullHistory = document.getElementById('full-history');
+  if (state.turns.length === 0) {
+    fullHistory.innerHTML = '<div class="no-data">Пока нет ходов</div>';
+    return;
+  }
+  fullHistory.innerHTML = [...state.turns]
+    .reverse()
+    .map(turn => `<div class="full-history-item ${turn.counted ? '' : 'dimmed'}">${turnDescription(turn)}</div>`)
+    .join('');
+}
+
+function renderRollCount() {
+  document.getElementById('roll-count').textContent = `Ходов: ${state.turns.length}`;
+}
+
+function renderCounters(lastTurn = null) {
+  const headerParts = [];
+  if (state.rollMode === 'exhaust') headerParts.push(`Кубики ${state.exhaustIdx}/36`);
+  if (state.eventMode === 'exhaust') headerParts.push(`События ${state.eventIdx}/6`);
+  document.getElementById('deck-counter').innerHTML = headerParts.length ? headerParts.join(' · ') : '&nbsp;';
+
+  const combo = document.getElementById('combo-counter');
+  if (!lastTurn) {
+    const parts = [];
+    parts.push(state.rollMode === 'exhaust' ? `Кубики ${state.exhaustIdx}/36` : 'Комбо: 1/36');
+    if (state.eventMode === 'exhaust') parts.push(`События ${state.eventIdx}/6`);
+    combo.textContent = parts.join(' · ');
+    return;
+  }
+
+  const parts = [`${lastTurn.d1}+${lastTurn.d2} = 1/36`];
+  if (!lastTurn.counted) parts.push('без статистики');
+  if (state.eventMode === 'exhaust') parts.push(`события ${state.eventIdx}/6`);
+  combo.textContent = parts.join(' · ');
+}
+
+function makeEventView(turn) {
+  const event = EVENT_DEFS[turn.eventKey];
+  const isBarbarians = turn.eventKey === 'barbarians';
+  let img = '';
+  if (isBarbarians) {
+    if (state.barbarianTracking) {
+      img = `/images/barbarians${turn.barbarianPositionAfter}.png`;
+    } else {
+      img = '/images/barbarians.svg';
+    }
+  } else {
+    img = `/images/${event.imgBase}${turn.d2}.png`;
+  }
+
+  return {
+    eventKey: turn.eventKey,
+    name: isBarbarians ? 'Варвары!' : `${event.name} (${turn.d2})`,
+    sub: event.sub || '\u00A0',
+    color: event.color,
+    image: img,
+    barbarianImage: isBarbarians && state.barbarianTracking ? img : '',
+    total: turn.total,
+  };
+}
+
+function renderEventState(view) {
+  const imgEl = document.getElementById('event-img');
+  document.getElementById('event-name').textContent = view.name;
+  document.getElementById('event-sub').textContent = view.sub;
+  document.getElementById('event-name').style.color = view.color;
+  document.getElementById('event-sub').style.color = view.color;
+  imgEl.src = view.image;
+  imgEl.classList.add('shown');
+  document.getElementById('event-placeholder').classList.add('hidden');
+
+  const section = document.getElementById('event-section');
+  section.style.borderColor = view.color;
+  section.style.boxShadow = `0 0 20px ${view.color}33`;
+  document.getElementById('event-caption').style.borderTopColor = view.color;
+  document.getElementById('sum-value').textContent = String(view.total);
+  document.getElementById('sum-value').style.color = view.color;
+  document.getElementById('sum-block').style.borderColor = view.color;
+}
+
+function renderStartEventState() {
+  const imgEl = document.getElementById('event-img');
+  if (state.barbarianTracking) {
+    imgEl.src = state.barbarianPosition > 0
+      ? `/images/barbarians${state.barbarianPosition}.png`
+      : '/images/barbarians1_start.png';
+    imgEl.classList.add('shown');
+    document.getElementById('event-placeholder').classList.add('hidden');
+    document.getElementById('event-name').textContent = 'Варвары';
+    document.getElementById('event-sub').textContent = state.barbarianPosition > 0 ? `Позиция: ${state.barbarianPosition}` : 'Стартовое положение';
+    document.getElementById('event-name').style.color = EVENT_DEFS.barbarians.color;
+    document.getElementById('event-sub').style.color = EVENT_DEFS.barbarians.color;
+    document.getElementById('event-section').style.borderColor = EVENT_DEFS.barbarians.color;
+    document.getElementById('event-section').style.boxShadow = `0 0 20px ${EVENT_DEFS.barbarians.color}33`;
+    document.getElementById('event-caption').style.borderTopColor = EVENT_DEFS.barbarians.color;
+  } else {
+    imgEl.removeAttribute('src');
+    imgEl.classList.remove('shown');
+    document.getElementById('event-placeholder').classList.remove('hidden');
+    document.getElementById('event-name').textContent = 'Нажмите кнопку';
+    document.getElementById('event-sub').textContent = 'чтобы начать';
+    document.getElementById('event-name').style.color = EVENT_DEFS.trade.color;
+    document.getElementById('event-sub').style.color = '';
+    document.getElementById('event-section').style.borderColor = 'var(--border)';
+    document.getElementById('event-section').style.boxShadow = 'none';
+    document.getElementById('event-caption').style.borderTopColor = 'var(--border)';
+  }
+  document.getElementById('sum-value').textContent = '—';
+  document.getElementById('sum-block').style.borderColor = 'var(--border)';
+}
+
+function createTurn({ eventKey, d1, d2, elapsed, alchemist }) {
+  const total = d1 + d2;
+  let barbarianPositionAfter = state.barbarianPosition;
+  if (eventKey === 'barbarians' && state.barbarianTracking) {
+    barbarianPositionAfter = (state.barbarianPosition % 7) + 1;
+    state.barbarianPosition = barbarianPositionAfter;
+  }
+
+  return {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    number: state.turns.length + 1,
+    eventKey,
+    d1,
+    d2,
+    total,
+    elapsed,
+    alchemist,
+    counted: !alchemist,
+    usedDiceDeck: state.rollMode === 'exhaust' && !alchemist,
+    usedEventDeck: state.eventMode === 'exhaust',
+    barbarianPositionAfter,
+  };
+}
+
+function rerenderAfterStateChange(lastTurn = null) {
+  renderRollCount();
+  renderHistory();
+  renderCounters(lastTurn);
+  refreshSettingsUI();
+  if (document.getElementById('stats-modal') && !document.getElementById('stats-modal').classList.contains('modal-hidden')) {
+    renderStats();
+  }
+  if (!document.getElementById('history-modal').classList.contains('modal-hidden')) {
+    renderHistoryModal();
+  }
+}
+
+function applyTurn(turn) {
+  state.turns.push(turn);
+  const view = makeEventView(turn);
+  state.lastEventView = view;
+
+  animateDie(document.getElementById('die1'), turn.d1, DIE_WHITE(), false);
+  animateDie(document.getElementById('die2'), turn.d2, DIE_RED, true);
+
+  setTimeout(() => {
+    renderEventState(view);
+    rerenderAfterStateChange(turn);
+    document.getElementById('roll-btn').disabled = false;
+    state.locked = false;
+    setTimeout(() => startTimer(true), 80);
+  }, 660);
+}
+
+function roll(options = {}) {
+  if (state.locked) return;
+  state.locked = true;
+  document.getElementById('roll-btn').disabled = true;
+
+  const elapsed = finishTurnTimer();
+  const useAlchemist = Boolean(options.alchemist);
+  const eventKey = getNextEvent();
+  const [d1, d2] = getNextDice(useAlchemist, options.alchemyDice || null);
+  const turn = createTurn({ eventKey, d1, d2, elapsed, alchemist: useAlchemist });
+  applyTurn(turn);
+}
+
+function recomputeBarbarianPosition() {
+  let position = 0;
+  for (const turn of state.turns) {
+    if (turn.eventKey === 'barbarians' && state.barbarianTracking) {
+      position = turn.barbarianPositionAfter;
+    }
+  }
+  state.barbarianPosition = position;
+}
+
+function undoLastTurn() {
+  if (state.turns.length === 0 || state.locked) return;
+  const removed = state.turns.pop();
+  if (removed.usedDiceDeck && state.exhaustIdx > 0) state.exhaustIdx -= 1;
+  if (removed.usedEventDeck && state.eventIdx > 0) state.eventIdx -= 1;
+  recomputeBarbarianPosition();
+  state.lastEventView = state.turns.length ? makeEventView(state.turns[state.turns.length - 1]) : null;
+
+  if (state.lastEventView) renderEventState(state.lastEventView);
+  else renderStartEventState();
+
+  rerenderAfterStateChange(state.turns[state.turns.length - 1] || null);
+}
+
+function resetGame() {
+  state.turns = [];
+  state.exhaustDeck = [];
+  state.exhaustIdx = 0;
+  state.eventDeck = [];
+  state.eventIdx = 0;
+  state.barbarianPosition = 0;
+  state.lastEventView = null;
+  finishTurnTimer();
+  renderDie(document.getElementById('die1'), 1, DIE_WHITE(), false);
+  renderDie(document.getElementById('die2'), 1, DIE_RED, true);
+  renderStartEventState();
+  rerenderAfterStateChange(null);
+}
+
+function refreshSettingsUI() {
+  document.getElementById('mode-random').classList.toggle('selected', state.rollMode === 'random');
+  document.getElementById('mode-exhaust').classList.toggle('selected', state.rollMode === 'exhaust');
+  document.getElementById('event-mode-random').classList.toggle('selected', state.eventMode === 'random');
+  document.getElementById('event-mode-exhaust').classList.toggle('selected', state.eventMode === 'exhaust');
+  document.getElementById('barbarian-toggle').checked = state.barbarianTracking;
+  document.querySelectorAll('.time-chip').forEach(btn => {
+    btn.classList.toggle('selected', Number(btn.dataset.t) === state.timeLimit);
+  });
+  document.getElementById('custom-time-input').value = state.timeLimit > 0 && ![15, 30, 45, 60, 90].includes(state.timeLimit)
+    ? String(state.timeLimit)
+    : '';
+}
+
+function getCountedTurns() {
+  return state.turns.filter(turn => turn.counted);
+}
+
+function countedEvents() {
+  return getCountedTurns().reduce((acc, turn) => {
+    acc[turn.eventKey] += 1;
+    return acc;
+  }, { trade: 0, politics: 0, science: 0, barbarians: 0 });
 }
 
 function renderStats() {
   const body = document.getElementById('stats-body');
-  const n    = sums.length;
-  if (n === 0) { body.innerHTML = '<div class="no-data">Нет данных</div>'; return; }
+  const countedTurns = getCountedTurns();
+  const n = countedTurns.length;
+  if (n === 0) {
+    body.innerHTML = '<div class="no-data">Нет данных по статистике</div>';
+    return;
+  }
 
-  const curSec = (timerRunning||alarmActive) ? (timeLimit>0 ? timeLimit-timerSecs : timerSecs) : 0;
-  const totSec = totalThink + curSec;
-  const avg    = sums.reduce((a,b)=>a+b,0)/n;
-  const diff   = avg-7;
-  const sign   = diff>=0?'+':'';
+  const currentElapsed = currentTurnElapsed() || 0;
+  const totalThink = countedTurns.reduce((sum, turn) => sum + (turn.elapsed || 0), 0) + currentElapsed;
+  const sums = countedTurns.map(turn => turn.total);
+  const avg = sums.reduce((a, b) => a + b, 0) / n;
+  const diff = avg - 7;
+  const sign = diff >= 0 ? '+' : '';
   const diffCol = isDark()
-    ? (Math.abs(diff)<.5?'#7AE8A3':(Math.abs(diff)<1.5?'#E8C97A':'#E87A7A'))
-    : (Math.abs(diff)<.5?'#156830':(Math.abs(diff)<1.5?'#9A6D08':'#AA2020'));
+    ? (Math.abs(diff) < 0.5 ? '#7AE8A3' : (Math.abs(diff) < 1.5 ? '#E8C97A' : '#E87A7A'))
+    : (Math.abs(diff) < 0.5 ? '#156830' : (Math.abs(diff) < 1.5 ? '#9A6D08' : '#AA2020'));
 
-  const counts={};
-  for(let s=2;s<=12;s++) counts[s]=0;
-  sums.forEach(s=>counts[s]++);
-  const maxPct = Math.max(...Object.values(counts).map(c=>c/n*100),...Object.values(THEORY))*1.15;
+  const counts = {};
+  for (let s = 2; s <= 12; s++) counts[s] = 0;
+  sums.forEach(sum => { counts[sum] += 1; });
+  const maxPct = Math.max(...Object.values(counts).map(c => (c / n) * 100), ...Object.values(THEORY)) * 1.15;
 
   body.innerHTML = `
     <div class="stats-row-4">
-      <div class="stat-cell"><div class="stat-label">ВРЕМЯ</div><div class="stat-val">${Math.floor(totSec/60)}:${String(totSec%60).padStart(2,'0')}</div></div>
-      <div class="stat-cell"><div class="stat-label">БРОСКОВ</div><div class="stat-val">${n}</div></div>
+      <div class="stat-cell"><div class="stat-label">ВРЕМЯ</div><div class="stat-val">${Math.floor(totalThink / 60)}:${String(totalThink % 60).padStart(2, '0')}</div></div>
+      <div class="stat-cell"><div class="stat-label">ХОДОВ</div><div class="stat-val">${n}</div></div>
       <div class="stat-cell"><div class="stat-label">СРЕДНЕЕ</div><div class="stat-val">${avg.toFixed(1)}</div></div>
       <div class="stat-cell"><div class="stat-label">ОТКЛ</div><div class="stat-val" style="color:${diffCol}">${sign}${diff.toFixed(1)}</div></div>
     </div>
@@ -414,68 +669,301 @@ function renderStats() {
       <div class="tbl-head"><span>СОБЫТИЕ</span><span>КОЛ</span><span>ФАКТ%</span><span>ТЕОР%</span></div>
       ${eventsRows()}
       <div class="tbl-sep"></div>
-      <div class="tbl-total"><span>ИТОГО</span><span>${Object.values(evCounts).reduce((a,b)=>a+b,0)}</span></div>
+      <div class="tbl-total"><span>ИТОГО</span><span>${n}</span></div>
     </div>
     <div class="stats-section-label">ДЕТАЛЬНО ПО СУММАМ</div>
     <div class="tbl-detail">
       <div class="tbl-head"><span>СУМ</span><span>КОЛ</span><span>ФАКТ%</span><span>ТЕОР%</span><span>ОТКЛ%</span></div>
-      ${detailRows(counts,n)}
+      ${detailRows(counts, n)}
     </div>`;
 
-  setTimeout(()=>drawChart(counts,n,maxPct), 30);
+  setTimeout(() => drawChart(counts, n, maxPct), 30);
 }
 
 function eventsRows() {
-  const total = Object.values(evCounts).reduce((a,b)=>a+b,0)||1;
-  return Object.entries(evCounts).map(([name,cnt])=>{
-    const pct=cnt/total*100, th=EV_THEORY[name]||0, col=evTableColor(name);
+  const counts = countedEvents();
+  const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
+  return Object.keys(EVENT_DEFS).map(key => {
+    const event = EVENT_DEFS[key];
+    const count = counts[key];
+    const pct = (count / total) * 100;
+    const th = EVENT_THEORY[key] || 0;
+    const color = evTableColor(key);
     return `<div class="tbl-row">
-      <span style="color:${col}">${name}</span><span>${cnt}</span>
-      <span style="color:${col}">${pct.toFixed(0)}%</span>
-      <span style="color:var(--dim)">${th.toFixed(0)}%</span></div>`;
+      <span style="color:${color}">${event.name}</span>
+      <span>${count}</span>
+      <span style="color:${color}">${pct.toFixed(0)}%</span>
+      <span style="color:var(--dim)">${th.toFixed(0)}%</span>
+    </div>`;
   }).join('');
 }
 
-function detailRows(counts,n) {
-  let h='';
-  for(let s=2;s<=12;s++){
-    const fp=counts[s]/n*100, tp=THEORY[s], dev=fp-tp, sign=dev>=0?'+':'';
-    const col=isDark()
-      ?(Math.abs(dev)<3?'#7AE8A3':(Math.abs(dev)<6?'#E8C97A':'#E87A7A'))
-      :(Math.abs(dev)<3?'#156830':(Math.abs(dev)<6?'#9A6D08':'#AA2020'));
-    h+=`<div class="tbl-row"><span>${s}</span><span>${counts[s]}</span>
-      <span>${fp.toFixed(1)}%</span><span style="color:var(--dim)">${tp.toFixed(1)}%</span>
-      <span style="color:${col}">${sign}${dev.toFixed(1)}%</span></div>`;
+function detailRows(counts, n) {
+  let html = '';
+  for (let s = 2; s <= 12; s++) {
+    const fact = (counts[s] / n) * 100;
+    const theory = THEORY[s];
+    const dev = fact - theory;
+    const sign = dev >= 0 ? '+' : '';
+    const color = isDark()
+      ? (Math.abs(dev) < 3 ? '#7AE8A3' : (Math.abs(dev) < 6 ? '#E8C97A' : '#E87A7A'))
+      : (Math.abs(dev) < 3 ? '#156830' : (Math.abs(dev) < 6 ? '#9A6D08' : '#AA2020'));
+    html += `<div class="tbl-row">
+      <span>${s}</span>
+      <span>${counts[s]}</span>
+      <span>${fact.toFixed(1)}%</span>
+      <span style="color:var(--dim)">${theory.toFixed(1)}%</span>
+      <span style="color:${color}">${sign}${dev.toFixed(1)}%</span>
+    </div>`;
   }
-  return h;
+  return html;
 }
 
-function drawChart(counts,n,maxPct) {
-  const canvas=document.getElementById('stats-chart'); if(!canvas) return;
-  const W=canvas.parentElement.clientWidth-2, H=210;
-  canvas.width=W; canvas.height=H;
-  const ctx=canvas.getContext('2d'), p=chartPalette();
-  const padL=8,padR=8,padT=44,padB=20, bw=W-padL-padR, bh=H-padT-padB, slot=bw/11;
-  ctx.font='10px Courier,monospace';
-  for(let i=0;i<11;i++){
-    const s=i+2, xc=padL+(i+.5)*slot, fp=counts[s]/n*100, tp=THEORY[s], gap=Math.max(2,slot*.14);
-    const fh=Math.max(2,fp/maxPct*bh), fy=padT+bh-fh;
-    ctx.fillStyle=p.bar; ctx.fillRect(xc-slot/2+gap,fy,slot-2*gap,fh);
-    const ty=padT+bh-tp/maxPct*bh;
-    ctx.strokeStyle=p.theory; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.moveTo(xc-slot/2+gap,ty); ctx.lineTo(xc+slot/2-gap,ty); ctx.stroke();
-    if(counts[s]>0){
-      ctx.fillStyle=p.label; ctx.textAlign='center';
-      ctx.fillText(`${fp.toFixed(0)}%`,xc,fy-14);
-      ctx.fillStyle=p.dim; ctx.fillText(`(${counts[s]})`,xc,fy-2);
+function drawChart(counts, n, maxPct) {
+  const canvas = document.getElementById('stats-chart');
+  if (!canvas) return;
+  const W = canvas.parentElement.clientWidth - 2;
+  const H = 210;
+  canvas.width = W;
+  canvas.height = H;
+
+  const ctx = canvas.getContext('2d');
+  const p = chartPalette();
+  const padL = 8;
+  const padR = 8;
+  const padT = 44;
+  const padB = 20;
+  const bw = W - padL - padR;
+  const bh = H - padT - padB;
+  const slot = bw / 11;
+
+  ctx.font = '10px Courier, monospace';
+
+  for (let i = 0; i < 11; i++) {
+    const s = i + 2;
+    const xc = padL + (i + 0.5) * slot;
+    const fact = (counts[s] / n) * 100;
+    const theory = THEORY[s];
+    const gap = Math.max(2, slot * 0.14);
+    const factHeight = Math.max(2, (fact / maxPct) * bh);
+    const factY = padT + bh - factHeight;
+
+    ctx.fillStyle = p.bar;
+    ctx.fillRect(xc - slot / 2 + gap, factY, slot - 2 * gap, factHeight);
+
+    const theoryY = padT + bh - (theory / maxPct) * bh;
+    ctx.strokeStyle = p.theory;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(xc - slot / 2 + gap, theoryY);
+    ctx.lineTo(xc + slot / 2 - gap, theoryY);
+    ctx.stroke();
+
+    if (counts[s] > 0) {
+      ctx.fillStyle = p.label;
+      ctx.textAlign = 'center';
+      ctx.fillText(`${fact.toFixed(0)}%`, xc, factY - 14);
+      ctx.fillStyle = p.dim;
+      ctx.fillText(`(${counts[s]})`, xc, factY - 2);
     }
-    ctx.fillStyle=p.dim; ctx.textAlign='center'; ctx.fillText(String(s),xc,H-2);
+
+    ctx.fillStyle = p.dim;
+    ctx.textAlign = 'center';
+    ctx.fillText(String(s), xc, H - 2);
   }
-  ctx.strokeStyle=p.base; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(padL,padT+bh); ctx.lineTo(W-padR,padT+bh); ctx.stroke();
-  ctx.fillStyle=p.bar; ctx.fillRect(W-90,5,12,8);
-  ctx.fillStyle=p.dim; ctx.textAlign='left'; ctx.fillText('факт',W-76,13);
-  ctx.strokeStyle=p.theory; ctx.lineWidth=3;
-  ctx.beginPath(); ctx.moveTo(W-44,9); ctx.lineTo(W-32,9); ctx.stroke();
-  ctx.fillStyle=p.dim; ctx.fillText('теория',W-30,13);
+
+  ctx.strokeStyle = p.base;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padL, padT + bh);
+  ctx.lineTo(W - padR, padT + bh);
+  ctx.stroke();
+
+  ctx.fillStyle = p.bar;
+  ctx.fillRect(W - 90, 5, 12, 8);
+  ctx.fillStyle = p.dim;
+  ctx.textAlign = 'left';
+  ctx.fillText('факт', W - 76, 13);
+
+  ctx.strokeStyle = p.theory;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(W - 44, 9);
+  ctx.lineTo(W - 32, 9);
+  ctx.stroke();
+  ctx.fillStyle = p.dim;
+  ctx.fillText('теория', W - 30, 13);
 }
+
+function renderDie(canvas, value, color, highlight, ox = 0, oy = 0) {
+  const ctx = canvas.getContext('2d');
+  const s = canvas.width;
+  const th = dieTheme();
+  ctx.clearRect(0, 0, s, s);
+  ctx.save();
+  ctx.translate(ox, oy);
+
+  const pad = 8;
+  const r = 16;
+  const x0 = pad;
+  const y0 = pad;
+  const x1 = s - pad;
+  const y1 = s - pad;
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,.5)';
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetX = 4;
+  ctx.shadowOffsetY = 4;
+  rrect(ctx, x0 + 4, y0 + 4, x1 + 4, y1 + 4, r, th.shadow);
+  ctx.restore();
+
+  rrect(ctx, x0, y0, x1, y1, r, th.face, color, highlight ? 3 : 2);
+
+  const dr = Math.max(8, Math.floor(s / 16));
+  (DOT_POS[value] || []).forEach(([px, py]) => {
+    const cx = x0 + ((x1 - x0) * px) / 100;
+    const cy = y0 + ((y1 - y0) * py) / 100;
+    ctx.beginPath();
+    ctx.arc(cx, cy, dr, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  });
+
+  ctx.restore();
+}
+
+function rrect(ctx, x0, y0, x1, y1, r, fill, stroke, sw) {
+  ctx.beginPath();
+  ctx.moveTo(x0 + r, y0);
+  ctx.lineTo(x1 - r, y0);
+  ctx.quadraticCurveTo(x1, y0, x1, y0 + r);
+  ctx.lineTo(x1, y1 - r);
+  ctx.quadraticCurveTo(x1, y1, x1 - r, y1);
+  ctx.lineTo(x0 + r, y1);
+  ctx.quadraticCurveTo(x0, y1, x0, y1 - r);
+  ctx.lineTo(x0, y0 + r);
+  ctx.quadraticCurveTo(x0, y0, x0 + r, y0);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+  if (stroke) {
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = sw || 2;
+    ctx.stroke();
+  }
+}
+
+function animateDie(canvas, finalVal, color, highlight) {
+  let step = 0;
+  function frame() {
+    const amp = Math.max(1, 9 - step);
+    const value = step === 15 ? finalVal : rnd6();
+    const ox = Math.round((Math.random() * 2 - 1) * amp);
+    const oy = Math.round((Math.random() * 2 - 1) * amp);
+    renderDie(canvas, value, color, highlight, ox, oy);
+    step += 1;
+    if (step < 16) setTimeout(frame, 35);
+    else renderDie(canvas, finalVal, color, highlight);
+  }
+  frame();
+}
+
+function bindModalClose(modalId, closeBtnId) {
+  document.getElementById(closeBtnId).addEventListener('click', () => closeModal(modalId));
+  document.getElementById(modalId).addEventListener('click', e => {
+    if (e.target === document.getElementById(modalId)) closeModal(modalId);
+  });
+}
+
+function init() {
+  ['die1', 'die2'].forEach(id => {
+    const canvas = document.getElementById(id);
+    canvas.width = DICE_SIZE;
+    canvas.height = DICE_SIZE;
+  });
+  renderDie(document.getElementById('die1'), 1, DIE_WHITE(), false);
+  renderDie(document.getElementById('die2'), 1, DIE_RED, true);
+
+  document.getElementById('roll-btn').addEventListener('click', () => roll());
+  document.getElementById('stat-btn').addEventListener('click', () => {
+    renderStats();
+    openModal('stats-modal');
+  });
+  document.getElementById('history-btn').addEventListener('click', () => {
+    renderHistoryModal();
+    openModal('history-modal');
+  });
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    refreshSettingsUI();
+    openModal('settings-modal');
+  });
+  document.getElementById('alchemist-btn').addEventListener('click', () => {
+    renderAlchemySelectors();
+    openModal('alchemist-modal');
+  });
+
+  document.getElementById('pause-btn').addEventListener('click', pauseTimer);
+  document.getElementById('play-btn').addEventListener('click', () => {
+    if (state.timerPaused) resumeTimer();
+    else if (!state.timerRunning) startTimer(!state.timerStarted);
+  });
+
+  document.getElementById('mode-random').addEventListener('click', () => setRollMode('random'));
+  document.getElementById('mode-exhaust').addEventListener('click', () => setRollMode('exhaust'));
+  document.getElementById('event-mode-random').addEventListener('click', () => setEventMode('random'));
+  document.getElementById('event-mode-exhaust').addEventListener('click', () => setEventMode('exhaust'));
+  document.getElementById('barbarian-toggle').addEventListener('change', e => setBarbarianTracking(e.target.checked));
+  document.querySelectorAll('.time-chip').forEach(btn => {
+    btn.addEventListener('click', () => setTimeLimit(Number(btn.dataset.t)));
+  });
+
+  document.getElementById('apply-custom-time').addEventListener('click', () => {
+    const raw = Number(document.getElementById('custom-time-input').value);
+    setTimeLimit(Number.isFinite(raw) ? raw : 0);
+  });
+  document.getElementById('new-game-btn').addEventListener('click', resetGame);
+  document.getElementById('undo-last-btn').addEventListener('click', undoLastTurn);
+  document.getElementById('apply-alchemist-btn').addEventListener('click', () => {
+    closeModal('alchemist-modal');
+    roll({ alchemist: true, alchemyDice: [state.alchemyDie1, state.alchemyDie2] });
+  });
+
+  bindModalClose('stats-modal', 'btn-x');
+  bindModalClose('settings-modal', 'btn-settings-x');
+  bindModalClose('history-modal', 'btn-history-x');
+  bindModalClose('alchemist-modal', 'btn-alchemist-x');
+  document.getElementById('btn-close-modal').addEventListener('click', () => closeModal('stats-modal'));
+  document.getElementById('btn-close-settings').addEventListener('click', () => closeModal('settings-modal'));
+  document.getElementById('btn-close-history').addEventListener('click', () => closeModal('history-modal'));
+  document.getElementById('btn-close-alchemist').addEventListener('click', () => closeModal('alchemist-modal'));
+
+  renderAlchemySelectors();
+  refreshSettingsUI();
+  renderRollCount();
+  renderCounters();
+  renderHistory();
+  renderStartEventState();
+  updateTimerDisplay();
+  setTimerStyle();
+}
+
+function renderAlchemySelectors() {
+  drawChoiceGrid('alchemy-die1', state.alchemyDie1, value => {
+    state.alchemyDie1 = value;
+    renderAlchemySelectors();
+  });
+  drawChoiceGrid('alchemy-die2', state.alchemyDie2, value => {
+    state.alchemyDie2 = value;
+    renderAlchemySelectors();
+  });
+}
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (state.lastEventView) renderEventState(state.lastEventView);
+  else renderStartEventState();
+  renderHistory();
+  if (!document.getElementById('stats-modal').classList.contains('modal-hidden')) renderStats();
+});
+
+init();
