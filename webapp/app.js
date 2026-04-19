@@ -113,8 +113,11 @@ function getApiBase() {
   return state.syncServerUrl || defaultSyncBase();
 }
 
+const IS_SOURCE_DEPLOY = Boolean(document.querySelector('script[src="app.js"]'));
+
 function imageUrl(name) {
-  return new URL(`images/${name}`, document.baseURI).href;
+  const prefix = IS_SOURCE_DEPLOY ? 'public/images' : 'images';
+  return new URL(`${prefix}/${name}`, document.baseURI).href;
 }
 
 function isDark() {
