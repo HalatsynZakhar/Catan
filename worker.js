@@ -23,7 +23,7 @@ function randomCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-const DEVICE_TTL_MS = 20_000;
+const DEVICE_TTL_MS = 3_000;
 
 function normalizeDevices(devices) {
   const next = {};

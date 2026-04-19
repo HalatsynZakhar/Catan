@@ -112,7 +112,9 @@ const state = {
   syncRevision: 0,
   syncBusy: false,
   syncParticipantCount: 0,
+  syncExpectedParticipants: 0,
   syncDeviceLabels: [],
+  syncNetworkOk: true,
   simultaneousMode: true,
   pendingCue: null,
   cueTimeout: null,
@@ -344,6 +346,7 @@ function startTimerAt(anchorMs = 0, reset = true, silent = false) {
 }
 
 function pauseTimer() {
+  if (!guardStrictSyncAction()) return;
   if (!state.timerRunning || state.alarmActive) return;
   if (state.timeLimit > 0 && state.timerDeadlineMs) {
     state.timerSecs = Math.max(0, Math.ceil((state.timerDeadlineMs - syncedNow()) / 1000));
@@ -361,6 +364,7 @@ function pauseTimer() {
 }
 
 function resumeTimer() {
+  if (!guardStrictSyncAction()) return;
   if (state.locked || state.alarmActive) return;
   if (!state.timerStarted) {
     startTimer(true);
@@ -399,6 +403,7 @@ function finishTurnTimer() {
 }
 
 function setRollMode(mode) {
+  if (!guardStrictSyncAction()) return;
   state.rollMode = mode;
   state.exhaustDeck = [];
   state.exhaustIdx = 0;
@@ -408,6 +413,7 @@ function setRollMode(mode) {
 }
 
 function setEventMode(mode) {
+  if (!guardStrictSyncAction()) return;
   state.eventMode = mode;
   state.eventDeck = [];
   state.eventIdx = 0;
@@ -417,6 +423,7 @@ function setEventMode(mode) {
 }
 
 function setTimeLimit(secs) {
+  if (!guardStrictSyncAction()) return;
   state.timeLimit = Math.max(0, secs || 0);
   finishTurnTimer();
   refreshSettingsUI();
@@ -424,6 +431,7 @@ function setTimeLimit(secs) {
 }
 
 function setBarbarianTracking(enabled) {
+  if (!guardStrictSyncAction()) return;
   state.barbarianTracking = enabled;
   refreshSettingsUI();
   renderHistory();
@@ -437,12 +445,14 @@ function setBarbarianTracking(enabled) {
 }
 
 function setSimultaneousMode(enabled) {
+  if (!guardStrictSyncAction()) return;
   state.simultaneousMode = enabled;
   refreshSettingsUI();
   ensureAllSettingsSynced();
 }
 
 function setBarbarianPosition(position) {
+  if (!guardStrictSyncAction()) return;
   state.barbarianPosition = position;
   renderHistory();
   if (!state.turns.length) {
@@ -473,6 +483,7 @@ function syncAvailable() {
 
 function syncStatusText() {
   if (!syncAvailable()) return 'Синхронизация недоступна';
+  if (isStrictSyncBlocked()) return 'Синхронизация приостановлена';
   if (!state.syncConnected) return 'Не подключено';
   return `Код игры: ${state.syncCode}`;
 }
@@ -487,6 +498,7 @@ function renderSyncUI() {
   const banner = document.getElementById('sync-banner');
   if (banner) {
     banner.textContent = `Устр.: ${state.syncParticipantCount}`;
+    banner.classList.toggle('sync-banner-hidden', !state.syncConnected || state.syncParticipantCount <= 1);
   }
 }
 
@@ -495,14 +507,43 @@ function ensureAllSettingsSynced() {
   pushStateToSync(true).catch(() => {});
 }
 
+function isStrictSyncBlocked() {
+  if (!state.syncConnected) return false;
+  if (state.syncExpectedParticipants <= 1) return false;
+  if (!state.syncNetworkOk) return true;
+  return state.syncParticipantCount < state.syncExpectedParticipants;
+}
+
+function updateStrictSyncUiState() {
+  const blocked = isStrictSyncBlocked();
+  const rollBtn = document.getElementById('roll-btn');
+  const pauseBtn = document.getElementById('pause-btn');
+  const playBtn = document.getElementById('play-btn');
+  if (rollBtn && !state.locked) rollBtn.disabled = blocked;
+  if (pauseBtn) pauseBtn.disabled = blocked;
+  if (playBtn) playBtn.disabled = blocked;
+}
+
+function guardStrictSyncAction() {
+  if (!isStrictSyncBlocked()) return true;
+  showToast('Синхронизация потеряна. Действия временно заблокированы.');
+  return false;
+}
+
 function updateSyncPresence(count, labels = []) {
   const prev = state.syncParticipantCount;
   state.syncParticipantCount = Number(count || 0);
+  state.syncExpectedParticipants = Math.max(state.syncExpectedParticipants, state.syncParticipantCount);
   state.syncDeviceLabels = Array.isArray(labels) ? labels : [];
+  state.syncNetworkOk = true;
   if (state.syncConnected && prev > 0 && prev !== state.syncParticipantCount) {
     showToast(`Устройств в игре: ${state.syncParticipantCount}`);
   }
+  if (state.syncConnected && state.syncExpectedParticipants > 1 && state.syncParticipantCount < state.syncExpectedParticipants) {
+    showToast('Одно из устройств пропало. Игра поставлена на паузу до восстановления синхронизации.');
+  }
   renderSyncUI();
+  updateStrictSyncUiState();
 }
 
 async function ensureAutoSession() {
@@ -647,6 +688,8 @@ function hydrateState(gameState) {
   refreshSettingsUI();
   updateTimerDisplay();
   setTimerStyle();
+  renderSyncUI();
+  updateStrictSyncUiState();
 
   if (state.timerRunning && !state.alarmActive) {
     runTimerTick();
@@ -687,8 +730,12 @@ async function pushStateToSync(force = false) {
       body: JSON.stringify(payload),
     });
     state.syncRevision = data.revision;
+    state.syncNetworkOk = true;
     updateSyncPresence(data.participantCount, data.deviceLabels);
   } catch (error) {
+    state.syncNetworkOk = false;
+    renderSyncUI();
+    updateStrictSyncUiState();
     if (String(error.message) === 'revision-conflict') {
       await pullStateFromSync();
     }
@@ -699,7 +746,16 @@ async function pushStateToSync(force = false) {
 
 async function pullStateFromSync() {
   if (!state.syncConnected || !state.syncCode) return;
-  const data = await apiFetch(`/sessions/${state.syncCode}?revision=${state.syncRevision}&deviceId=${encodeURIComponent(state.deviceId)}`);
+  let data;
+  try {
+    data = await apiFetch(`/sessions/${state.syncCode}?revision=${state.syncRevision}&deviceId=${encodeURIComponent(state.deviceId)}`);
+    state.syncNetworkOk = true;
+  } catch (error) {
+    state.syncNetworkOk = false;
+    renderSyncUI();
+    updateStrictSyncUiState();
+    throw error;
+  }
   if (!data) return;
   updateSyncPresence(data.participantCount, data.deviceLabels);
   if (typeof data.revision === 'number' && data.revision >= state.syncRevision) {
@@ -732,6 +788,8 @@ async function createSyncSession() {
   state.syncCode = data.code;
   state.syncRevision = data.revision;
   state.syncConnected = true;
+  state.syncNetworkOk = true;
+  state.syncExpectedParticipants = Math.max(1, Number(data.participantCount || 1));
   updateSyncPresence(data.participantCount, data.deviceLabels);
   startSyncPolling();
   showToast(`Код игры создан: ${data.code}`);
@@ -748,6 +806,8 @@ async function joinSyncSession(code) {
   state.syncCode = normalized;
   state.syncRevision = data.revision;
   state.syncConnected = true;
+  state.syncNetworkOk = true;
+  state.syncExpectedParticipants = Math.max(1, Number(data.participantCount || 1));
   if (data.gameState) hydrateState(data.gameState);
   updateSyncPresence(data.participantCount, data.deviceLabels);
   startSyncPolling();
@@ -761,9 +821,12 @@ function leaveSyncSession() {
   state.syncRevision = 0;
   state.syncConnected = false;
   state.syncParticipantCount = 0;
+  state.syncExpectedParticipants = 0;
   state.syncDeviceLabels = [];
+  state.syncNetworkOk = true;
   document.getElementById('join-code-input').value = '';
   renderSyncUI();
+  updateStrictSyncUiState();
   showToast('Синхронизация отключена');
 }
 
@@ -875,6 +938,7 @@ function extractImportedState(text) {
 }
 
 async function importGameLog(file) {
+  if (!guardStrictSyncAction()) return;
   const text = await file.text();
   const importedState = extractImportedState(text);
   hydrateState(importedState);
@@ -1075,6 +1139,7 @@ function applyTurn(turn) {
 }
 
 function roll(options = {}) {
+  if (!guardStrictSyncAction()) return;
   if (state.locked) return;
   state.locked = true;
   document.getElementById('roll-btn').disabled = true;
@@ -1115,6 +1180,7 @@ function recomputeBarbarianPosition() {
 }
 
 function undoLastTurn() {
+  if (!guardStrictSyncAction()) return;
   if (state.turns.length === 0 || state.locked) return;
   const removed = state.turns.pop();
   if (removed.usedDiceDeck && state.exhaustIdx > 0) state.exhaustIdx -= 1;
@@ -1129,6 +1195,7 @@ function undoLastTurn() {
 }
 
 function resetGame() {
+  if (!guardStrictSyncAction()) return;
   state.turns = [];
   state.exhaustDeck = [];
   state.exhaustIdx = 0;
@@ -1524,6 +1591,7 @@ function init() {
   updateTimerDisplay();
   setTimerStyle();
   renderSyncUI();
+  updateStrictSyncUiState();
   ensureAutoSession();
 }
 
@@ -1538,11 +1606,29 @@ function renderAlchemySelectors() {
   });
 }
 
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-  if (state.lastEventView) renderEventState(state.lastEventView);
-  else renderStartEventState();
-  renderHistory();
-  if (!document.getElementById('stats-modal').classList.contains('modal-hidden')) renderStats();
-});
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (state.lastEventView) renderEventState(state.lastEventView);
+    else renderStartEventState();
+    renderHistory();
+    if (!document.getElementById('stats-modal').classList.contains('modal-hidden')) renderStats();
+  });
 
-init();
+  window.addEventListener('offline', () => {
+    state.syncNetworkOk = false;
+    renderSyncUI();
+    updateStrictSyncUiState();
+    if (state.syncConnected && state.syncExpectedParticipants > 1) {
+      showToast('Интернет пропал. Действия заблокированы до восстановления синхронизации.');
+    }
+  });
+
+  window.addEventListener('online', () => {
+    state.syncNetworkOk = true;
+    renderSyncUI();
+    updateStrictSyncUiState();
+    if (state.syncConnected) {
+      pullStateFromSync().catch(() => {});
+    }
+  });
+
+  init();
