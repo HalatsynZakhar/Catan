@@ -188,16 +188,15 @@ button, input { font: inherit; }
 
 .sync-banner {
   align-self: center;
-  min-height: 24px;
+  flex: 0 0 auto;
   background: rgba(26, 72, 152, 0.18);
   border: 1px solid rgba(122, 159, 232, 0.4);
   color: var(--blue);
   border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 0.66rem;
+  padding: 4px 10px;
+  font-size: 0.62rem;
   font-weight: bold;
   letter-spacing: 0.4px;
-  flex-shrink: 0;
   text-align: center;
 }
 
