@@ -52,8 +52,8 @@
 
     <!-- ── Buttons ── -->
     <div class="btn-row">
-      <button id="roll-btn" class="btn-roll" ontouchstart="" onclick="roll()">БРОСИТЬ КУБИКИ</button>
-      <button class="btn-stat" ontouchstart="" onclick="showStats()">СТАТ</button>
+      <button id="roll-btn" class="btn-roll" ontouchstart="">БРОСИТЬ КУБИКИ</button>
+      <button id="stat-btn" class="btn-stat" ontouchstart="">СТАТ</button>
     </div>
 
     <!-- ── History ── -->
@@ -68,18 +68,18 @@
   </div>
 
   <!-- ── Stats Modal ── -->
-  <div id="stats-modal" class="modal modal-hidden" onclick="closeStatsOutside(event)">
+  <div id="stats-modal" class="modal modal-hidden">
     <div class="modal-inner">
       <div class="modal-header">
         <span class="app-title">СТАТИСТИКА</span>
-        <button class="btn-x" ontouchstart="" onclick="closeStats()">✕</button>
+        <button id="btn-x" class="btn-x" ontouchstart="">✕</button>
       </div>
       <div class="divider"></div>
       <div class="modal-body" id="stats-body"></div>
-      <button class="btn-close-modal" ontouchstart="" onclick="closeStats()">ЗАКРЫТЬ</button>
+      <button id="btn-close-modal" class="btn-close-modal" ontouchstart="">ЗАКРЫТЬ</button>
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

@@ -83,6 +83,12 @@ const DICE_SIZE = Math.min(
   [c1, c2].forEach(c => { c.width = DICE_SIZE; c.height = DICE_SIZE; });
   renderDie(c1, 1, '#E8C97A', false);
   renderDie(c2, 1, '#E8C97A', true);
+
+  document.getElementById('roll-btn').addEventListener('click', roll);
+  document.getElementById('stat-btn').addEventListener('click', showStats);
+  document.getElementById('btn-x').addEventListener('click', closeStats);
+  document.getElementById('btn-close-modal').addEventListener('click', closeStats);
+  document.getElementById('stats-modal').addEventListener('click', closeStatsOutside);
 })();
 
 // ── Dice drawing ──────────────────────────────────────────────
