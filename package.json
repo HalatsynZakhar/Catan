@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev":   "npm --prefix webapp install && npm --prefix webapp run dev",
-    "build": "npm --prefix webapp install && npm --prefix webapp run build"
+    "build": "npm --prefix webapp install && npm --prefix webapp run build",
+    "serve": "npm run build && node server.js"
   }
 }

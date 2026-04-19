@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Катан — Кубики</title>
-  <script type="module" crossorigin src="/assets/index-mZlpkM6H.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-D97ZIPWi.css">
+  <script type="module" crossorigin src="/assets/index-C6RLi3qp.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BYoDYHFx.css">
 </head>
 <body>
   <div id="app">
@@ -17,6 +17,11 @@
         <span class="app-title">КАТАН</span>
         <span id="roll-count" class="roll-count">Ходов: 0</span>
         <span id="deck-counter" class="deck-counter">&nbsp;</span>
+      </div>
+
+      <div class="turn-brief">
+        <div id="turn-brief-number" class="turn-brief-number">Ход: —</div>
+        <div id="turn-brief-event" class="turn-brief-event">Событие: —</div>
       </div>
 
       <div class="timer-cluster">
@@ -51,9 +56,7 @@
       </div>
 
       <div class="sum-block" id="sum-block">
-        <div class="sum-label">СУММА</div>
         <div id="sum-value" class="sum-value">—</div>
-        <div id="combo-counter" class="combo-counter">1/36: —</div>
       </div>
 
       <button id="alchemist-btn" class="btn-alchemist" ontouchstart="">Алхимик</button>
@@ -157,6 +160,23 @@
           </div>
         </label>
 
+        <div class="settings-section-label top-gap">СИНХРОНИЗАЦИЯ</div>
+        <div class="sync-card">
+          <div id="sync-status" class="mode-desc">Не подключено</div>
+          <div class="sync-row">
+            <button id="create-sync-btn" class="small-action-btn" ontouchstart="">Создать код</button>
+            <button id="leave-sync-btn" class="small-action-btn muted-action-btn" ontouchstart="">Отключиться</button>
+          </div>
+          <label class="custom-time-row sync-join-row" for="join-code-input">
+            <span class="mode-title">Войти по коду игры</span>
+            <div class="custom-time-input-wrap">
+              <input id="join-code-input" class="custom-time-input" type="text" inputmode="numeric" maxlength="6" placeholder="6 цифр">
+              <button id="join-sync-btn" class="small-action-btn" ontouchstart="">Войти</button>
+            </div>
+          </label>
+          <div class="mode-desc">Все устройства должны открыть одну и ту же ссылку на сервер игры. После подключения состояние партии синхронизируется между устройствами.</div>
+        </div>
+
         <div class="settings-section-label top-gap">ПАРТИЯ</div>
         <button id="new-game-btn" class="danger-action-btn" ontouchstart="">Новая игра</button>
       </div>
@@ -201,6 +221,7 @@
         <div id="alchemy-die1" class="position-grid"></div>
 
         <div class="settings-section-label top-gap">ВТОРОЙ КУБИК</div>
+        <div class="mode-desc alchemist-die-note">Красный кубик, влияющий на получение карт развития.</div>
         <div id="alchemy-die2" class="position-grid"></div>
 
         <button id="apply-alchemist-btn" class="btn-roll alchemist-apply" ontouchstart="">Применить алхимика</button>

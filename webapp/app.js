@@ -93,9 +93,18 @@ const state = {
   timerStarted: false,
   timerIval: null,
   alarmActive: false,
+  timerSyncedAt: 0,
   alchemyDie1: 1,
   alchemyDie2: 1,
+  deviceId: crypto.randomUUID ? crypto.randomUUID() : `device-${Math.random().toString(16).slice(2)}`,
+  syncCode: '',
+  syncConnected: false,
+  syncPollIval: null,
+  syncRevision: 0,
+  syncBusy: false,
 };
+
+const API_BASE = window.location.protocol.startsWith('http') ? `${window.location.origin}/api` : '';
 
 function isDark() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -211,10 +220,12 @@ function triggerAlarm() {
   state.timerPaused = false;
   state.alarmActive = true;
   state.timerStarted = true;
+  state.timerSyncedAt = Date.now();
   updateTimerDisplay();
   setTimerStyle();
   document.getElementById('roll-btn').classList.add('alarm');
   if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 500]);
+  pushStateToSync().catch(() => {});
 }
 
 function runTimerTick() {
@@ -246,9 +257,11 @@ function startTimer(reset = true) {
   state.timerStarted = true;
   state.timerPaused = false;
   state.timerRunning = true;
+  state.timerSyncedAt = Date.now();
   updateTimerDisplay();
   setTimerStyle();
   runTimerTick();
+  pushStateToSync().catch(() => {});
 }
 
 function pauseTimer() {
@@ -256,7 +269,9 @@ function pauseTimer() {
   clearTimerInterval();
   state.timerRunning = false;
   state.timerPaused = true;
+  state.timerSyncedAt = Date.now();
   setTimerStyle();
+  pushStateToSync().catch(() => {});
 }
 
 function resumeTimer() {
@@ -268,8 +283,10 @@ function resumeTimer() {
   if (!state.timerPaused) return;
   state.timerRunning = true;
   state.timerPaused = false;
+  state.timerSyncedAt = Date.now();
   setTimerStyle();
   runTimerTick();
+  pushStateToSync().catch(() => {});
 }
 
 function finishTurnTimer() {
@@ -279,6 +296,7 @@ function finishTurnTimer() {
   state.timerPaused = false;
   state.timerStarted = false;
   state.alarmActive = false;
+  state.timerSyncedAt = Date.now();
   document.getElementById('timer-display').classList.remove('warning', 'danger', 'alarm');
   document.getElementById('roll-btn').classList.remove('alarm');
   updateTimerDisplay();
@@ -291,6 +309,7 @@ function setRollMode(mode) {
   state.exhaustIdx = 0;
   refreshSettingsUI();
   renderCounters();
+  pushStateToSync().catch(() => {});
 }
 
 function setEventMode(mode) {
@@ -299,12 +318,14 @@ function setEventMode(mode) {
   state.eventIdx = 0;
   refreshSettingsUI();
   renderCounters();
+  pushStateToSync().catch(() => {});
 }
 
 function setTimeLimit(secs) {
   state.timeLimit = Math.max(0, secs || 0);
   finishTurnTimer();
   refreshSettingsUI();
+  pushStateToSync().catch(() => {});
 }
 
 function setBarbarianTracking(enabled) {
@@ -317,6 +338,7 @@ function setBarbarianTracking(enabled) {
     state.lastEventView = makeEventView(state.turns[state.turns.length - 1]);
     renderEventState(state.lastEventView);
   }
+  pushStateToSync().catch(() => {});
 }
 
 function setBarbarianPosition(position) {
@@ -329,6 +351,7 @@ function setBarbarianPosition(position) {
     renderEventState(state.lastEventView);
   }
   renderHistoryModal();
+  pushStateToSync().catch(() => {});
 }
 
 function openModal(id) {
@@ -337,6 +360,222 @@ function openModal(id) {
 
 function closeModal(id) {
   document.getElementById(id).classList.add('modal-hidden');
+}
+
+function sanitizeJoinCode(value) {
+  return String(value || '').replace(/\D/g, '').slice(0, 6);
+}
+
+function syncAvailable() {
+  return Boolean(API_BASE);
+}
+
+function syncStatusText() {
+  if (!syncAvailable()) return 'Синхронизация доступна только при открытии через сервер игры.';
+  if (!state.syncConnected) return 'Не подключено';
+  return `Подключено к игре ${state.syncCode} • ревизия ${state.syncRevision}`;
+}
+
+function renderSyncUI() {
+  const status = document.getElementById('sync-status');
+  if (status) status.textContent = syncStatusText();
+  const leaveBtn = document.getElementById('leave-sync-btn');
+  if (leaveBtn) leaveBtn.disabled = !state.syncConnected;
+}
+
+function serializeState() {
+  return {
+    turns: state.turns,
+    rollMode: state.rollMode,
+    exhaustDeck: state.exhaustDeck,
+    exhaustIdx: state.exhaustIdx,
+    eventMode: state.eventMode,
+    eventDeck: state.eventDeck,
+    eventIdx: state.eventIdx,
+    timeLimit: state.timeLimit,
+    barbarianTracking: state.barbarianTracking,
+    barbarianPosition: state.barbarianPosition,
+    timerSecs: state.timerSecs,
+    timerRunning: state.timerRunning,
+    timerPaused: state.timerPaused,
+    timerStarted: state.timerStarted,
+    alarmActive: state.alarmActive,
+    timerSyncedAt: state.timerSyncedAt || Date.now(),
+    alchemyDie1: state.alchemyDie1,
+    alchemyDie2: state.alchemyDie2,
+  };
+}
+
+function normalizeRemoteTimer(gameState) {
+  const syncedAt = Number(gameState.timerSyncedAt) || Date.now();
+  const elapsedSec = Math.max(0, Math.floor((Date.now() - syncedAt) / 1000));
+  if (!gameState.timerStarted || gameState.alarmActive || gameState.timerPaused) return gameState;
+
+  if (gameState.timerRunning) {
+    if (gameState.timeLimit > 0) {
+      gameState.timerSecs = Math.max(0, gameState.timerSecs - elapsedSec);
+      if (gameState.timerSecs === 0) {
+        gameState.timerRunning = false;
+        gameState.alarmActive = true;
+      }
+    } else {
+      gameState.timerSecs += elapsedSec;
+    }
+    gameState.timerSyncedAt = Date.now();
+  }
+  return gameState;
+}
+
+function hydrateState(gameState) {
+  const incoming = normalizeRemoteTimer(typeof structuredClone === 'function'
+    ? structuredClone(gameState)
+    : JSON.parse(JSON.stringify(gameState)));
+  clearTimerInterval();
+
+  state.turns = incoming.turns || [];
+  state.rollMode = incoming.rollMode || 'random';
+  state.exhaustDeck = incoming.exhaustDeck || [];
+  state.exhaustIdx = incoming.exhaustIdx || 0;
+  state.eventMode = incoming.eventMode || 'random';
+  state.eventDeck = incoming.eventDeck || [];
+  state.eventIdx = incoming.eventIdx || 0;
+  state.timeLimit = incoming.timeLimit || 0;
+  state.barbarianTracking = incoming.barbarianTracking !== false;
+  state.barbarianPosition = incoming.barbarianPosition || 0;
+  state.timerSecs = incoming.timerSecs || 0;
+  state.timerRunning = Boolean(incoming.timerRunning);
+  state.timerPaused = Boolean(incoming.timerPaused);
+  state.timerStarted = Boolean(incoming.timerStarted);
+  state.alarmActive = Boolean(incoming.alarmActive);
+  state.timerSyncedAt = incoming.timerSyncedAt || Date.now();
+  state.alchemyDie1 = incoming.alchemyDie1 || 1;
+  state.alchemyDie2 = incoming.alchemyDie2 || 1;
+  state.locked = false;
+
+  state.lastEventView = state.turns.length ? makeEventView(state.turns[state.turns.length - 1]) : null;
+  renderDie(document.getElementById('die1'), 1, DIE_WHITE(), false);
+  renderDie(document.getElementById('die2'), 1, DIE_RED, true);
+
+  if (state.lastEventView) {
+    const lastTurn = state.turns[state.turns.length - 1];
+    renderEventState(state.lastEventView);
+    renderCounters(lastTurn);
+  } else {
+    renderStartEventState();
+    renderCounters();
+  }
+
+  renderRollCount();
+  renderHistory();
+  refreshSettingsUI();
+  updateTimerDisplay();
+  setTimerStyle();
+
+  if (state.timerRunning && !state.alarmActive) {
+    runTimerTick();
+  }
+  if (!document.getElementById('history-modal').classList.contains('modal-hidden')) renderHistoryModal();
+  if (!document.getElementById('stats-modal').classList.contains('modal-hidden')) renderStats();
+}
+
+async function apiFetch(path, options = {}) {
+  if (!syncAvailable()) throw new Error('sync-unavailable');
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    ...options,
+  });
+  if (response.status === 204) return null;
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || 'sync-error');
+  return data;
+}
+
+async function pushStateToSync(force = false) {
+  if (!state.syncConnected || !state.syncCode || state.syncBusy) return;
+  state.syncBusy = true;
+  try {
+    const payload = {
+      deviceId: state.deviceId,
+      revision: state.syncRevision,
+      gameState: serializeState(),
+      force,
+    };
+    const data = await apiFetch(`/sessions/${state.syncCode}/state`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+    state.syncRevision = data.revision;
+    renderSyncUI();
+  } catch (error) {
+    if (String(error.message) === 'revision-conflict') {
+      await pullStateFromSync();
+    }
+  } finally {
+    state.syncBusy = false;
+  }
+}
+
+async function pullStateFromSync() {
+  if (!state.syncConnected || !state.syncCode) return;
+  const data = await apiFetch(`/sessions/${state.syncCode}?revision=${state.syncRevision}`);
+  if (!data) return;
+  if (typeof data.revision === 'number' && data.revision >= state.syncRevision) {
+    state.syncRevision = data.revision;
+    if (data.gameState) hydrateState(data.gameState);
+    renderSyncUI();
+  }
+}
+
+function startSyncPolling() {
+  stopSyncPolling();
+  state.syncPollIval = setInterval(() => {
+    pullStateFromSync().catch(() => {});
+  }, 1200);
+}
+
+function stopSyncPolling() {
+  if (state.syncPollIval) {
+    clearInterval(state.syncPollIval);
+    state.syncPollIval = null;
+  }
+}
+
+async function createSyncSession() {
+  const data = await apiFetch('/sessions', {
+    method: 'POST',
+    body: JSON.stringify({ deviceId: state.deviceId, gameState: serializeState() }),
+  });
+  state.syncCode = data.code;
+  state.syncRevision = data.revision;
+  state.syncConnected = true;
+  startSyncPolling();
+  renderSyncUI();
+  document.getElementById('join-code-input').value = data.code;
+}
+
+async function joinSyncSession(code) {
+  const normalized = sanitizeJoinCode(code);
+  if (normalized.length !== 6) return;
+  const data = await apiFetch(`/sessions/${normalized}/join`, {
+    method: 'POST',
+    body: JSON.stringify({ deviceId: state.deviceId }),
+  });
+  state.syncCode = normalized;
+  state.syncRevision = data.revision;
+  state.syncConnected = true;
+  if (data.gameState) hydrateState(data.gameState);
+  startSyncPolling();
+  renderSyncUI();
+  document.getElementById('join-code-input').value = normalized;
+}
+
+function leaveSyncSession() {
+  stopSyncPolling();
+  state.syncCode = '';
+  state.syncRevision = 0;
+  state.syncConnected = false;
+  document.getElementById('join-code-input').value = '';
+  renderSyncUI();
 }
 
 function drawChoiceGrid(containerId, selectedValue, onClick) {
@@ -404,25 +643,31 @@ function renderRollCount() {
   document.getElementById('roll-count').textContent = `Ходов: ${state.turns.length}`;
 }
 
+function renderTurnBrief() {
+  const numberEl = document.getElementById('turn-brief-number');
+  const eventEl = document.getElementById('turn-brief-event');
+  const lastTurn = state.turns[state.turns.length - 1];
+
+  if (!lastTurn) {
+    numberEl.textContent = 'Ход: —';
+    eventEl.textContent = 'Событие: —';
+    eventEl.style.color = '';
+    return;
+  }
+
+  const event = EVENT_DEFS[lastTurn.eventKey];
+  numberEl.textContent = `Ход: ${lastTurn.number}`;
+  eventEl.textContent = lastTurn.eventKey === 'barbarians'
+    ? 'Событие: Варвары!'
+    : `Событие: ${event.name}`;
+  eventEl.style.color = event.color;
+}
+
 function renderCounters(lastTurn = null) {
   const headerParts = [];
   if (state.rollMode === 'exhaust') headerParts.push(`Кубики ${state.exhaustIdx}/36`);
   if (state.eventMode === 'exhaust') headerParts.push(`События ${state.eventIdx}/6`);
   document.getElementById('deck-counter').innerHTML = headerParts.length ? headerParts.join(' · ') : '&nbsp;';
-
-  const combo = document.getElementById('combo-counter');
-  if (!lastTurn) {
-    const parts = [];
-    parts.push(state.rollMode === 'exhaust' ? `Кубики ${state.exhaustIdx}/36` : 'Комбо: 1/36');
-    if (state.eventMode === 'exhaust') parts.push(`События ${state.eventIdx}/6`);
-    combo.textContent = parts.join(' · ');
-    return;
-  }
-
-  const parts = [`${lastTurn.d1}+${lastTurn.d2} = 1/36`];
-  if (!lastTurn.counted) parts.push('без статистики');
-  if (state.eventMode === 'exhaust') parts.push(`события ${state.eventIdx}/6`);
-  combo.textContent = parts.join(' · ');
 }
 
 function makeEventView(turn) {
@@ -504,7 +749,9 @@ function createTurn({ eventKey, d1, d2, elapsed, alchemist }) {
   const total = d1 + d2;
   let barbarianPositionAfter = state.barbarianPosition;
   if (eventKey === 'barbarians' && state.barbarianTracking) {
-    barbarianPositionAfter = (state.barbarianPosition % 7) + 1;
+    barbarianPositionAfter = state.barbarianPosition === 0
+      ? 2
+      : (state.barbarianPosition % 7) + 1;
     state.barbarianPosition = barbarianPositionAfter;
   }
 
@@ -524,8 +771,9 @@ function createTurn({ eventKey, d1, d2, elapsed, alchemist }) {
   };
 }
 
-function rerenderAfterStateChange(lastTurn = null) {
+function rerenderAfterStateChange(lastTurn = null, skipSync = false) {
   renderRollCount();
+  renderTurnBrief();
   renderHistory();
   renderCounters(lastTurn);
   refreshSettingsUI();
@@ -535,6 +783,8 @@ function rerenderAfterStateChange(lastTurn = null) {
   if (!document.getElementById('history-modal').classList.contains('modal-hidden')) {
     renderHistoryModal();
   }
+  renderSyncUI();
+  if (!skipSync) pushStateToSync().catch(() => {});
 }
 
 function applyTurn(turn) {
@@ -922,6 +1172,25 @@ function init() {
     const raw = Number(document.getElementById('custom-time-input').value);
     setTimeLimit(Number.isFinite(raw) ? raw : 0);
   });
+  document.getElementById('join-code-input').addEventListener('input', e => {
+    e.target.value = sanitizeJoinCode(e.target.value);
+  });
+  document.getElementById('create-sync-btn').addEventListener('click', async () => {
+    try {
+      await createSyncSession();
+    } catch (error) {
+      window.alert('Не удалось создать код игры. Убедитесь, что страница открыта через сервер.');
+    }
+  });
+  document.getElementById('join-sync-btn').addEventListener('click', async () => {
+    const code = document.getElementById('join-code-input').value;
+    try {
+      await joinSyncSession(code);
+    } catch (error) {
+      window.alert('Не удалось подключиться к игре по этому коду.');
+    }
+  });
+  document.getElementById('leave-sync-btn').addEventListener('click', leaveSyncSession);
   document.getElementById('new-game-btn').addEventListener('click', resetGame);
   document.getElementById('undo-last-btn').addEventListener('click', undoLastTurn);
   document.getElementById('apply-alchemist-btn').addEventListener('click', () => {
@@ -941,11 +1210,13 @@ function init() {
   renderAlchemySelectors();
   refreshSettingsUI();
   renderRollCount();
+  renderTurnBrief();
   renderCounters();
   renderHistory();
   renderStartEventState();
   updateTimerDisplay();
   setTimerStyle();
+  renderSyncUI();
 }
 
 function renderAlchemySelectors() {

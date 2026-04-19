@@ -59,7 +59,7 @@ button, input { font: inherit; }
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 10px;
   flex-shrink: 0;
 }
@@ -74,6 +74,33 @@ button, input { font: inherit; }
 .app-title { font-size: 1.05rem; font-weight: bold; color: var(--text); letter-spacing: 3px; }
 .roll-count { font-size: 0.72rem; color: var(--dim); }
 .deck-counter { font-size: 0.68rem; color: var(--blue); min-height: 0.9em; }
+
+.turn-brief {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.turn-brief-number {
+  font-size: 0.86rem;
+  font-weight: bold;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.turn-brief-event {
+  font-size: 0.72rem;
+  color: var(--gold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .timer-cluster {
   display: flex;
@@ -268,34 +295,19 @@ button, input { font: inherit; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
   transition: border-color 0.3s ease;
-  padding: 6px 8px;
-}
-
-.sum-label {
-  font-size: 0.58rem;
-  font-weight: bold;
-  color: var(--dim);
-  letter-spacing: 1.5px;
+  padding: 4px 8px;
 }
 
 .sum-value {
-  font-size: clamp(2rem, 8vw, 3rem);
+  font-size: clamp(3rem, 15vw, 5.6rem);
   font-weight: bold;
   color: var(--green);
-  line-height: 1.05;
+  line-height: 1;
   transition: color 0.25s ease;
-}
-
-.combo-counter {
-  font-size: 0.62rem;
-  color: var(--dim);
   text-align: center;
-  min-height: 1em;
 }
 
 .btn-alchemist {
@@ -581,7 +593,39 @@ button, input { font: inherit; }
 }
 
 .small-action-btn { background: var(--blue); }
+.muted-action-btn { background: var(--border); }
 .danger-action-btn { background: var(--red); width: 100%; }
+
+.sync-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sync-row {
+  display: flex;
+  gap: 8px;
+}
+
+.sync-row .small-action-btn {
+  flex: 1;
+}
+
+.sync-join-row {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.alchemist-die-note {
+  margin-bottom: 8px;
+}
 
 .position-grid {
   display: grid;
