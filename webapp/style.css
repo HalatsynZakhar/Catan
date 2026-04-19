@@ -38,11 +38,12 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: "Courier New", Courier, monospace;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 14px;
   overflow: hidden;
   touch-action: manipulation;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button, input { font: inherit; }
@@ -505,13 +506,21 @@ button, input { font: inherit; }
 
 .toast {
   background: rgba(19, 19, 31, 0.94);
-  color: var(--text);
+  color: #f7f8ff;
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px 12px;
   font-size: 0.72rem;
   line-height: 1.35;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+}
+
+@media (prefers-color-scheme: light) {
+  .toast {
+    background: rgba(26, 24, 14, 0.94);
+    color: #fffdf7;
+    border-color: rgba(26, 24, 14, 0.22);
+  }
 }
 
 .modal-inner {
