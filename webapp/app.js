@@ -25,7 +25,39 @@ const THEORY = {
 };
 
 const EV_THEORY = { 'Варвары!': 50.0, 'Жёлтая овца': 16.7, 'Синий камень': 16.7, 'Зелёная бумага': 16.7 };
-const EV_COLORS = { 'Варвары!': '#E87A7A', 'Жёлтая овца': '#E8C97A', 'Синий камень': '#7A9FE8', 'Зелёная бумага': '#7AE8A3' };
+
+// Event colors switch with theme — darker in light mode for contrast on white
+const EV_COLORS_DARK  = { 'Варвары!': '#E87A7A', 'Жёлтая овца': '#E8C97A', 'Синий камень': '#7A9FE8', 'Зелёная бумага': '#7AE8A3' };
+const EV_COLORS_LIGHT = { 'Варвары!': '#AA2020', 'Жёлтая овца': '#9A6D08', 'Синий камень': '#1A4898', 'Зелёная бумага': '#156830' };
+
+// Event roll colors (on dice / highlights) — always vivid; same for both themes
+const EV_COLORS = EV_COLORS_DARK;
+
+function isDark() {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function evTableColor(name) {
+  return isDark() ? EV_COLORS_DARK[name] : EV_COLORS_LIGHT[name];
+}
+
+// Die face colors per theme
+function dieTheme() {
+  if (isDark()) {
+    return { face: '#1A1A2E', shadow: '#050510', highlight: '#EEEEFF' };
+  } else {
+    return { face: '#E8E4D8', shadow: '#A09A88', highlight: '#1A180E' };
+  }
+}
+
+// Chart palette per theme
+function chartPalette() {
+  if (isDark()) {
+    return { bar: '#7A9FE8', theory: '#E87A7A', label: '#EEEEFF', dim: '#5A5A7A', base: '#2A2A40' };
+  } else {
+    return { bar: '#1A4898', theory: '#AA2020', label: '#1A180E', dim: '#7A7260', base: '#C8C2AC' };
+  }
+}
 
 // ── State ─────────────────────────────────────────────────────
 let rollCount    = 0;
@@ -57,6 +89,7 @@ const DICE_SIZE = Math.min(
 function renderDie(canvas, value, color, highlight, ox = 0, oy = 0) {
   const ctx = canvas.getContext('2d');
   const s   = canvas.width;
+  const th  = dieTheme();
   ctx.clearRect(0, 0, s, s);
   ctx.save();
   ctx.translate(ox, oy);
@@ -66,21 +99,21 @@ function renderDie(canvas, value, color, highlight, ox = 0, oy = 0) {
 
   // Shadow
   ctx.save();
-  ctx.shadowColor  = 'rgba(0,0,0,0.6)';
-  ctx.shadowBlur   = 10;
+  ctx.shadowColor   = 'rgba(0,0,0,0.45)';
+  ctx.shadowBlur    = 10;
   ctx.shadowOffsetX = 4;
   ctx.shadowOffsetY = 4;
-  rrect(ctx, x0 + 4, y0 + 4, x1 + 4, y1 + 4, r, '#050510');
+  rrect(ctx, x0 + 4, y0 + 4, x1 + 4, y1 + 4, r, th.shadow);
   ctx.restore();
 
   // Face
-  const bc = highlight ? '#EEEEFF' : color;
+  const bc = highlight ? th.highlight : color;
   const bw = highlight ? 3 : 2;
-  rrect(ctx, x0, y0, x1, y1, r, '#1A1A2E', bc, bw);
+  rrect(ctx, x0, y0, x1, y1, r, th.face, bc, bw);
 
   // Dots
   const dr   = Math.max(8, Math.floor(s / 16));
-  const dotC = highlight ? '#EEEEFF' : color;
+  const dotC = highlight ? th.highlight : color;
   (DOT_POS[value] || []).forEach(([px, py]) => {
     const cx = x0 + (x1 - x0) * px / 100;
     const cy = y0 + (y1 - y0) * py / 100;
@@ -239,7 +272,9 @@ function renderStats() {
   const avg      = sums.reduce((a, b) => a + b, 0) / n;
   const diff     = avg - 7.0;
   const sign     = diff >= 0 ? '+' : '';
-  const diffCol  = Math.abs(diff) < 0.5 ? '#7AE8A3' : (Math.abs(diff) < 1.5 ? '#E8C97A' : '#E87A7A');
+  const diffCol  = isDark()
+    ? (Math.abs(diff) < 0.5 ? '#7AE8A3' : (Math.abs(diff) < 1.5 ? '#E8C97A' : '#E87A7A'))
+    : (Math.abs(diff) < 0.5 ? '#156830' : (Math.abs(diff) < 1.5 ? '#9A6D08' : '#AA2020'));
 
   const counts = {};
   for (let s = 2; s <= 12; s++) counts[s] = 0;
@@ -287,12 +322,12 @@ function eventsRows() {
   return Object.entries(evCounts).map(([name, cnt]) => {
     const pct = cnt / total * 100;
     const th  = EV_THEORY[name] || 0;
-    const col = EV_COLORS[name] || '#EEEEFF';
+    const col = evTableColor(name);
     return `<div class="tbl-row">
       <span style="color:${col}">${name}</span>
       <span>${cnt}</span>
       <span style="color:${col}">${pct.toFixed(0)}%</span>
-      <span style="color:#5A5A7A">${th.toFixed(0)}%</span>
+      <span style="color:var(--dim)">${th.toFixed(0)}%</span>
     </div>`;
   }).join('');
 }
@@ -304,12 +339,14 @@ function detailRows(counts, n) {
     const tp   = THEORY[s];
     const dev  = fp - tp;
     const sign = dev >= 0 ? '+' : '';
-    const col  = Math.abs(dev) < 3 ? '#7AE8A3' : (Math.abs(dev) < 6 ? '#E8C97A' : '#E87A7A');
+    const col  = isDark()
+      ? (Math.abs(dev) < 3 ? '#7AE8A3' : (Math.abs(dev) < 6 ? '#E8C97A' : '#E87A7A'))
+      : (Math.abs(dev) < 3 ? '#156830' : (Math.abs(dev) < 6 ? '#9A6D08' : '#AA2020'));
     html += `<div class="tbl-row">
       <span>${s}</span>
       <span>${counts[s]}</span>
       <span>${fp.toFixed(1)}%</span>
-      <span style="color:#5A5A7A">${tp.toFixed(1)}%</span>
+      <span style="color:var(--dim)">${tp.toFixed(1)}%</span>
       <span style="color:${col}">${sign}${dev.toFixed(1)}%</span>
     </div>`;
   }
@@ -324,11 +361,12 @@ function drawChart(counts, n, maxPct) {
   canvas.width  = W;
   canvas.height = H;
 
-  const ctx   = canvas.getContext('2d');
-  const padL  = 8, padR = 8, padT = 44, padB = 20;
-  const bw    = W - padL - padR;
-  const bh    = H - padT - padB;
-  const slot  = bw / 11;
+  const ctx = canvas.getContext('2d');
+  const p   = chartPalette();
+  const padL = 8, padR = 8, padT = 44, padB = 20;
+  const bw   = W - padL - padR;
+  const bh   = H - padT - padB;
+  const slot = bw / 11;
 
   ctx.font = '10px Courier, monospace';
 
@@ -342,12 +380,12 @@ function drawChart(counts, n, maxPct) {
     // Fact bar
     const fh = Math.max(2, fp / maxPct * bh);
     const fy = padT + bh - fh;
-    ctx.fillStyle = '#7A9FE8';
+    ctx.fillStyle = p.bar;
     ctx.fillRect(xc - slot / 2 + gap, fy, slot - 2 * gap, fh);
 
     // Theory line
     const ty = padT + bh - (tp / maxPct * bh);
-    ctx.strokeStyle = '#E87A7A';
+    ctx.strokeStyle = p.theory;
     ctx.lineWidth   = 3;
     ctx.beginPath();
     ctx.moveTo(xc - slot / 2 + gap, ty);
@@ -356,21 +394,21 @@ function drawChart(counts, n, maxPct) {
 
     // Labels above bar
     if (counts[s] > 0) {
-      ctx.fillStyle  = '#EEEEFF';
-      ctx.textAlign  = 'center';
+      ctx.fillStyle = p.label;
+      ctx.textAlign = 'center';
       ctx.fillText(`${fp.toFixed(0)}%`, xc, fy - 14);
-      ctx.fillStyle = '#5A5A7A';
+      ctx.fillStyle = p.dim;
       ctx.fillText(`(${counts[s]})`, xc, fy - 2);
     }
 
     // Sum label below
-    ctx.fillStyle = '#5A5A7A';
+    ctx.fillStyle = p.dim;
     ctx.textAlign = 'center';
     ctx.fillText(String(s), xc, H - 2);
   }
 
   // Baseline
-  ctx.strokeStyle = '#2A2A40';
+  ctx.strokeStyle = p.base;
   ctx.lineWidth   = 1;
   ctx.beginPath();
   ctx.moveTo(padL, padT + bh);
@@ -378,14 +416,14 @@ function drawChart(counts, n, maxPct) {
   ctx.stroke();
 
   // Legend
-  ctx.fillStyle = '#7A9FE8';
+  ctx.fillStyle = p.bar;
   ctx.fillRect(W - 90, 5, 12, 8);
-  ctx.fillStyle = '#5A5A7A';
+  ctx.fillStyle = p.dim;
   ctx.textAlign = 'left';
   ctx.fillText('факт', W - 76, 13);
-  ctx.strokeStyle = '#E87A7A';
+  ctx.strokeStyle = p.theory;
   ctx.lineWidth   = 3;
   ctx.beginPath(); ctx.moveTo(W - 44, 9); ctx.lineTo(W - 32, 9); ctx.stroke();
-  ctx.fillStyle = '#5A5A7A';
+  ctx.fillStyle = p.dim;
   ctx.fillText('теория', W - 30, 13);
 }
