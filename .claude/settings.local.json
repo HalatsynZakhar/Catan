@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npm run *)",
-      "Bash(npx wrangler *)"
+      "Bash(npx wrangler *)",
+      "Bash(git -C C:\\\\Users\\\\zakhar\\\\PycharmProject\\\\catan status)",
+      "Bash(git -C \"C:/Users/zakhar/PycharmProject/catan\" status)"
     ]
   }
 }
