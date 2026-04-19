@@ -19,8 +19,7 @@
       </div>
 
       <div class="turn-brief">
-        <div id="turn-brief-number" class="turn-brief-number">Ход: —</div>
-        <div id="turn-brief-event" class="turn-brief-event">Событие: —</div>
+        <div id="turn-brief-number" class="turn-brief-number">—</div>
       </div>
 
       <div class="timer-cluster">
@@ -162,6 +161,13 @@
         <div class="settings-section-label top-gap">СИНХРОНИЗАЦИЯ</div>
         <div class="sync-card">
           <div id="sync-status" class="mode-desc">Не подключено</div>
+          <label class="custom-time-row sync-join-row" for="sync-server-input">
+            <span class="mode-title">Адрес sync-сервера</span>
+            <div class="custom-time-input-wrap">
+              <input id="sync-server-input" class="custom-time-input" type="text" placeholder="https://site.com/api или http://IP:8787/api">
+              <button id="apply-sync-server-btn" class="small-action-btn" ontouchstart="">Сохранить</button>
+            </div>
+          </label>
           <div class="sync-row">
             <button id="create-sync-btn" class="small-action-btn" ontouchstart="">Создать код</button>
             <button id="leave-sync-btn" class="small-action-btn muted-action-btn" ontouchstart="">Отключиться</button>

@@ -102,9 +102,22 @@ const state = {
   syncPollIval: null,
   syncRevision: 0,
   syncBusy: false,
+  syncServerUrl: localStorage.getItem('catan-sync-server') || '',
 };
 
-const API_BASE = window.location.protocol.startsWith('http') ? `${window.location.origin}/api` : '';
+function defaultSyncBase() {
+  return window.location.protocol.startsWith('http') ? `${window.location.origin}/api` : '';
+}
+
+function getApiBase() {
+  return state.syncServerUrl || defaultSyncBase();
+}
+
+const IMAGE_BASE = `${import.meta.env.BASE_URL || '/'}images/`;
+
+function imageUrl(name) {
+  return `${IMAGE_BASE}${name}`;
+}
 
 function isDark() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -347,7 +360,7 @@ function setBarbarianPosition(position) {
   if (!state.turns.length) {
     renderStartEventState();
   } else if (state.lastEventView && state.lastEventView.eventKey === 'barbarians' && state.barbarianTracking) {
-    state.lastEventView.image = `/images/barbarians${position}.png`;
+    state.lastEventView.image = imageUrl(`barbarians${position}.png`);
     renderEventState(state.lastEventView);
   }
   renderHistoryModal();
@@ -366,12 +379,19 @@ function sanitizeJoinCode(value) {
   return String(value || '').replace(/\D/g, '').slice(0, 6);
 }
 
+function normalizeSyncServerUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  return withProtocol.replace(/\/+$/, '');
+}
+
 function syncAvailable() {
-  return Boolean(API_BASE);
+  return Boolean(getApiBase());
 }
 
 function syncStatusText() {
-  if (!syncAvailable()) return 'Синхронизация доступна только при открытии через сервер игры.';
+  if (!syncAvailable()) return 'Укажите адрес sync-сервера.';
   if (!state.syncConnected) return 'Не подключено';
   return `Подключено к игре ${state.syncCode} • ревизия ${state.syncRevision}`;
 }
@@ -381,6 +401,8 @@ function renderSyncUI() {
   if (status) status.textContent = syncStatusText();
   const leaveBtn = document.getElementById('leave-sync-btn');
   if (leaveBtn) leaveBtn.disabled = !state.syncConnected;
+  const input = document.getElementById('sync-server-input');
+  if (input && document.activeElement !== input) input.value = state.syncServerUrl || defaultSyncBase();
 }
 
 function serializeState() {
@@ -480,7 +502,7 @@ function hydrateState(gameState) {
 
 async function apiFetch(path, options = {}) {
   if (!syncAvailable()) throw new Error('sync-unavailable');
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(`${getApiBase()}${path}`, {
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     ...options,
   });
@@ -578,6 +600,14 @@ function leaveSyncSession() {
   renderSyncUI();
 }
 
+function setSyncServerUrl(value) {
+  state.syncServerUrl = normalizeSyncServerUrl(value);
+  if (state.syncServerUrl) localStorage.setItem('catan-sync-server', state.syncServerUrl);
+  else localStorage.removeItem('catan-sync-server');
+  leaveSyncSession();
+  renderSyncUI();
+}
+
 function drawChoiceGrid(containerId, selectedValue, onClick) {
   const container = document.getElementById(containerId);
   container.innerHTML = '';
@@ -645,22 +675,14 @@ function renderRollCount() {
 
 function renderTurnBrief() {
   const numberEl = document.getElementById('turn-brief-number');
-  const eventEl = document.getElementById('turn-brief-event');
   const lastTurn = state.turns[state.turns.length - 1];
 
   if (!lastTurn) {
-    numberEl.textContent = 'Ход: —';
-    eventEl.textContent = 'Событие: —';
-    eventEl.style.color = '';
+    numberEl.textContent = '—';
     return;
   }
 
-  const event = EVENT_DEFS[lastTurn.eventKey];
-  numberEl.textContent = `Ход: ${lastTurn.number}`;
-  eventEl.textContent = lastTurn.eventKey === 'barbarians'
-    ? 'Событие: Варвары!'
-    : `Событие: ${event.name}`;
-  eventEl.style.color = event.color;
+  numberEl.textContent = String(lastTurn.number);
 }
 
 function renderCounters(lastTurn = null) {
@@ -676,12 +698,12 @@ function makeEventView(turn) {
   let img = '';
   if (isBarbarians) {
     if (state.barbarianTracking) {
-      img = `/images/barbarians${turn.barbarianPositionAfter}.png`;
+      img = imageUrl(`barbarians${turn.barbarianPositionAfter}.png`);
     } else {
-      img = '/images/barbarians.svg';
+      img = imageUrl('barbarians.svg');
     }
   } else {
-    img = `/images/${event.imgBase}${turn.d2}.png`;
+    img = imageUrl(`${event.imgBase}${turn.d2}.png`);
   }
 
   return {
@@ -718,8 +740,8 @@ function renderStartEventState() {
   const imgEl = document.getElementById('event-img');
   if (state.barbarianTracking) {
     imgEl.src = state.barbarianPosition > 0
-      ? `/images/barbarians${state.barbarianPosition}.png`
-      : '/images/barbarians1_start.png';
+      ? imageUrl(`barbarians${state.barbarianPosition}.png`)
+      : imageUrl('barbarians1_start.png');
     imgEl.classList.add('shown');
     document.getElementById('event-placeholder').classList.add('hidden');
     document.getElementById('event-name').textContent = 'Варвары';
@@ -1171,6 +1193,9 @@ function init() {
   document.getElementById('apply-custom-time').addEventListener('click', () => {
     const raw = Number(document.getElementById('custom-time-input').value);
     setTimeLimit(Number.isFinite(raw) ? raw : 0);
+  });
+  document.getElementById('apply-sync-server-btn').addEventListener('click', () => {
+    setSyncServerUrl(document.getElementById('sync-server-input').value);
   });
   document.getElementById('join-code-input').addEventListener('input', e => {
     e.target.value = sanitizeJoinCode(e.target.value);

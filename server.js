@@ -23,12 +23,20 @@ function sendJson(res, status, payload) {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
   });
   res.end(JSON.stringify(payload));
 }
 
 function sendEmpty(res, status = 204) {
-  res.writeHead(status, { 'Cache-Control': 'no-store' });
+  res.writeHead(status, {
+    'Cache-Control': 'no-store',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
+  });
   res.end();
 }
 
@@ -93,6 +101,10 @@ function normalizeState(raw) {
 }
 
 async function handleApi(req, res, pathname, urlObj) {
+  if (req.method === 'OPTIONS') {
+    sendEmpty(res, 204);
+    return;
+  }
   const parts = pathname.split('/').filter(Boolean);
 
   if (req.method === 'POST' && pathname === '/api/sessions') {
