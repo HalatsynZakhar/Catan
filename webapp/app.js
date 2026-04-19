@@ -314,11 +314,11 @@ function runTimerTick() {
   }, 250);
 }
 
-function startTimer(reset = true) {
-  startTimerAt(0, reset);
+function startTimer(reset = true, silent = false) {
+  startTimerAt(0, reset, silent);
 }
 
-function startTimerAt(anchorMs = 0, reset = true) {
+function startTimerAt(anchorMs = 0, reset = true, silent = false) {
   clearTimerInterval();
   state.alarmActive = false;
   document.getElementById('roll-btn').classList.remove('alarm');
@@ -340,7 +340,7 @@ function startTimerAt(anchorMs = 0, reset = true) {
   updateTimerDisplay();
   setTimerStyle();
   runTimerTick();
-  pushStateToSync().catch(() => {});
+  if (!silent) pushStateToSync().catch(() => {});
 }
 
 function pauseTimer() {
@@ -404,7 +404,7 @@ function setRollMode(mode) {
   state.exhaustIdx = 0;
   refreshSettingsUI();
   renderCounters();
-  pushStateToSync().catch(() => {});
+  ensureAllSettingsSynced();
 }
 
 function setEventMode(mode) {
@@ -413,14 +413,14 @@ function setEventMode(mode) {
   state.eventIdx = 0;
   refreshSettingsUI();
   renderCounters();
-  pushStateToSync().catch(() => {});
+  ensureAllSettingsSynced();
 }
 
 function setTimeLimit(secs) {
   state.timeLimit = Math.max(0, secs || 0);
   finishTurnTimer();
   refreshSettingsUI();
-  pushStateToSync().catch(() => {});
+  ensureAllSettingsSynced();
 }
 
 function setBarbarianTracking(enabled) {
@@ -433,13 +433,13 @@ function setBarbarianTracking(enabled) {
     state.lastEventView = makeEventView(state.turns[state.turns.length - 1]);
     renderEventState(state.lastEventView);
   }
-  pushStateToSync().catch(() => {});
+  ensureAllSettingsSynced();
 }
 
 function setSimultaneousMode(enabled) {
   state.simultaneousMode = enabled;
   refreshSettingsUI();
-  pushStateToSync().catch(() => {});
+  ensureAllSettingsSynced();
 }
 
 function setBarbarianPosition(position) {
@@ -452,7 +452,7 @@ function setBarbarianPosition(position) {
     renderEventState(state.lastEventView);
   }
   renderHistoryModal();
-  pushStateToSync().catch(() => {});
+  ensureAllSettingsSynced();
 }
 
 function openModal(id) {
@@ -488,6 +488,11 @@ function renderSyncUI() {
   if (banner) {
     banner.textContent = `Устр.: ${state.syncParticipantCount}`;
   }
+}
+
+function ensureAllSettingsSynced() {
+  if (!state.syncConnected) return;
+  pushStateToSync(true).catch(() => {});
 }
 
 function updateSyncPresence(count, labels = []) {
@@ -696,10 +701,11 @@ async function pullStateFromSync() {
   if (!state.syncConnected || !state.syncCode) return;
   const data = await apiFetch(`/sessions/${state.syncCode}?revision=${state.syncRevision}&deviceId=${encodeURIComponent(state.deviceId)}`);
   if (!data) return;
+  updateSyncPresence(data.participantCount, data.deviceLabels);
   if (typeof data.revision === 'number' && data.revision >= state.syncRevision) {
+    const hasNewState = data.changed !== false && data.revision > state.syncRevision;
     state.syncRevision = data.revision;
-    if (data.gameState) hydrateState(data.gameState);
-    updateSyncPresence(data.participantCount, data.deviceLabels);
+    if (hasNewState && data.gameState) hydrateState(data.gameState);
   }
 }
 
@@ -974,21 +980,14 @@ function playTurnAnimation(turn) {
 
   setTimeout(() => {
     renderEventState(view);
+    const timerAnchor = activeCue && activeCue.timerStartAt ? activeCue.timerStartAt : syncedNow();
+    if (state.pendingCue && state.pendingCue.turnId === turn.id) {
+      state.pendingCue = null;
+    }
+    startTimerAt(timerAnchor, true, true);
     rerenderAfterStateChange(turn);
     document.getElementById('roll-btn').disabled = false;
     state.locked = false;
-    if (state.pendingCue && state.pendingCue.turnId === turn.id) {
-      if (state.pendingCue.owner === state.deviceId) {
-        state.pendingCue = null;
-        pushStateToSync(true).catch(() => {});
-      } else {
-        state.pendingCue = null;
-      }
-    }
-    setTimeout(() => {
-      if (activeCue && activeCue.timerStartAt) startTimerAt(activeCue.timerStartAt, true);
-      else startTimer(true);
-    }, 80);
   }, 660);
 }
 

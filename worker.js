@@ -179,7 +179,9 @@ export class GameRoom {
     if (url.pathname === '/state' && request.method === 'GET') {
       const presence = await this.touchDevice(url.searchParams.get('deviceId') || '');
       const clientRevision = Number(url.searchParams.get('revision') || 0);
-      if (clientRevision === revision) return empty();
+      if (clientRevision === revision) {
+        return json({ revision, changed: false, ...presence });
+      }
       return json({ revision, gameState, ...presence });
     }
 
