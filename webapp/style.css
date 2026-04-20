@@ -650,6 +650,30 @@ button, input { font: inherit; }
   flex-shrink: 0;
 }
 
+.lang-options {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.lang-chip {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 8px 22px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--dim);
+  cursor: pointer;
+  letter-spacing: 0.05em;
+}
+
+.lang-chip-active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
 .time-options {
   display: flex;
   flex-wrap: wrap;

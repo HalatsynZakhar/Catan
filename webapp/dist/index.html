@@ -7,15 +7,15 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Катан — Кубики</title>
-  <script type="module" crossorigin src="/assets/index-CUzx2Y08.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-DmiAUQwJ.css">
+  <script type="module" crossorigin src="/assets/index-Keskg7_t.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CdLEbnqS.css">
 </head>
 <body>
   <div id="app">
     <header class="header">
       <div class="header-left">
         <div class="title-row">
-          <span class="app-title">КАТАН</span>
+          <span class="app-title" data-i18n="app_title">КАТАН</span>
           <span id="game-code" class="game-code">------</span>
         </div>
         <span id="roll-count" class="roll-count">Ходов: 0</span>
@@ -26,12 +26,12 @@
 
       <div class="timer-cluster">
         <div class="timer-display" id="timer-display">
-          <div class="timer-lbl">ХОД</div>
+          <div class="timer-lbl" data-i18n="timer_lbl">ХОД</div>
           <div id="timer-value" class="timer-value">—</div>
         </div>
         <div class="timer-actions">
-          <button id="pause-btn" class="mini-btn" ontouchstart="">ПАУЗА</button>
-          <button id="play-btn" class="mini-btn accent" ontouchstart="">ПЛЕЙ</button>
+          <button id="pause-btn" class="mini-btn" ontouchstart="" data-i18n="pause_btn">ПАУЗА</button>
+          <button id="play-btn" class="mini-btn accent" ontouchstart="" data-i18n="play_btn">ПЛЕЙ</button>
         </div>
       </div>
     </header>
@@ -41,11 +41,11 @@
     <div id="event-section" class="event-section">
       <div class="event-img-wrap">
         <img id="event-img" class="event-img" src="" alt="">
-        <div class="event-placeholder" id="event-placeholder"><span>КАТАН</span></div>
+        <div class="event-placeholder" id="event-placeholder"><span data-i18n="app_title">КАТАН</span></div>
       </div>
       <div class="event-caption" id="event-caption">
-        <div id="event-name" class="event-name">Нажмите кнопку</div>
-        <div id="event-sub" class="event-sub">чтобы начать</div>
+        <div id="event-name" class="event-name" data-i18n="event_name_initial">Нажмите кнопку</div>
+        <div id="event-sub" class="event-sub" data-i18n="event_sub_initial">чтобы начать</div>
       </div>
     </div>
 
@@ -59,19 +59,19 @@
         <div id="sum-value" class="sum-value">—</div>
       </div>
 
-      <button id="alchemist-btn" class="btn-alchemist" ontouchstart="">Алхимик</button>
+      <button id="alchemist-btn" class="btn-alchemist" ontouchstart="" data-i18n="alchemist_btn">Алхимик</button>
     </div>
 
     <div class="btn-row">
-      <button id="roll-btn" class="btn-roll" ontouchstart="">БРОСИТЬ КУБИКИ</button>
-      <button id="stat-btn" class="btn-stat" ontouchstart="">СТАТ</button>
-      <button id="history-btn" class="btn-stat" ontouchstart="">ИСТ</button>
+      <button id="roll-btn" class="btn-roll" ontouchstart="" data-i18n="roll_btn">БРОСИТЬ КУБИКИ</button>
+      <button id="stat-btn" class="btn-stat" ontouchstart="" data-i18n="stat_btn">СТАТ</button>
+      <button id="history-btn" class="btn-stat" ontouchstart="" data-i18n="history_btn">ИСТ</button>
       <button id="settings-btn" class="btn-icon" ontouchstart="">⚙</button>
     </div>
 
     <div class="card history-card">
       <div class="history-head">
-        <span>Последние ходы</span>
+        <span data-i18n="history_card_title">Последние ходы</span>
         <span id="history-meta" class="history-meta">Варвары: выкл</span>
       </div>
       <div id="recent-turns" class="recent-turns"></div>
@@ -83,67 +83,74 @@
   <div id="stats-modal" class="modal modal-hidden">
     <div class="modal-inner">
       <div class="modal-header">
-        <span class="app-title">СТАТИСТИКА</span>
+        <span class="app-title" data-i18n="stats_modal_title">СТАТИСТИКА</span>
         <button id="btn-x" class="btn-x" ontouchstart="">✕</button>
       </div>
       <div class="divider"></div>
       <div class="modal-body" id="stats-body"></div>
-      <button id="btn-close-modal" class="btn-close-modal" ontouchstart="">ЗАКРЫТЬ</button>
+      <button id="btn-close-modal" class="btn-close-modal" ontouchstart="" data-i18n="close_btn">ЗАКРЫТЬ</button>
     </div>
   </div>
 
   <div id="settings-modal" class="modal modal-hidden">
     <div class="modal-inner">
       <div class="modal-header">
-        <span class="app-title">НАСТРОЙКИ</span>
+        <span class="app-title" data-i18n="settings_modal_title">НАСТРОЙКИ</span>
         <button id="btn-settings-x" class="btn-x" ontouchstart="">✕</button>
       </div>
       <div class="divider"></div>
       <div class="modal-body">
-        <div class="settings-section-label">РЕЖИМ КУБИКОВ</div>
+
+        <div class="settings-section-label" data-i18n="section_lang">ЯЗЫК / МОВА</div>
+        <div class="lang-options">
+          <button class="lang-chip" data-lang="ru">RU</button>
+          <button class="lang-chip" data-lang="uk">UA</button>
+        </div>
+
+        <div class="settings-section-label top-gap" data-i18n="section_dice">РЕЖИМ КУБИКОВ</div>
         <div class="mode-option" id="mode-random">
           <div class="mode-radio"></div>
           <div class="mode-text">
-            <div class="mode-title">Случайный</div>
-            <div class="mode-desc">Каждый бросок независим.</div>
+            <div class="mode-title" data-i18n="mode_random_title">Случайный</div>
+            <div class="mode-desc" data-i18n="mode_random_desc">Каждый бросок независим.</div>
           </div>
         </div>
         <div class="mode-option" id="mode-exhaust">
           <div class="mode-radio"></div>
           <div class="mode-text">
-            <div class="mode-title">Выбивание — 36 комбинаций</div>
-            <div class="mode-desc">Все 36 сочетаний 1+1…6+6 проходят по одному разу, затем новая колода.</div>
+            <div class="mode-title" data-i18n="mode_exhaust_title">Выбивание — 36 комбинаций</div>
+            <div class="mode-desc" data-i18n="mode_exhaust_desc">Все 36 сочетаний 1+1…6+6 проходят по одному разу, затем новая колода.</div>
           </div>
         </div>
 
-        <div class="settings-section-label top-gap">РЕЖИМ СОБЫТИЙ</div>
+        <div class="settings-section-label top-gap" data-i18n="section_events">РЕЖИМ СОБЫТИЙ</div>
         <div class="mode-option" id="event-mode-random">
           <div class="mode-radio"></div>
           <div class="mode-text">
-            <div class="mode-title">Случайный</div>
-            <div class="mode-desc">Каждое событие выбирается случайно.</div>
+            <div class="mode-title" data-i18n="ev_random_title">Случайный</div>
+            <div class="mode-desc" data-i18n="ev_random_desc">Каждое событие выбирается случайно.</div>
           </div>
         </div>
         <div class="mode-option" id="event-mode-exhaust">
           <div class="mode-radio"></div>
           <div class="mode-text">
-            <div class="mode-title">Выбивание — 6 карточек</div>
-            <div class="mode-desc">Торговля, Политика, Учёность и 3 карты варваров идут по одной до нового перемешивания.</div>
+            <div class="mode-title" data-i18n="ev_exhaust_title">Выбивание — 6 карточек</div>
+            <div class="mode-desc" data-i18n="ev_exhaust_desc">Торговля, Политика, Учёность и 3 карты варваров идут по одной до нового перемешивания.</div>
           </div>
         </div>
 
-        <div class="settings-section-label top-gap">ВАРВАРЫ</div>
+        <div class="settings-section-label top-gap" data-i18n="section_barb">ВАРВАРЫ</div>
         <label class="toggle-row" for="barbarian-toggle">
           <div>
-            <div class="mode-title">Передвигать варваров</div>
-            <div class="mode-desc">По умолчанию включено. Если отключить, остаётся текущий режим без движения варваров.</div>
+            <div class="mode-title" data-i18n="barb_toggle_title">Передвигать варваров</div>
+            <div class="mode-desc" data-i18n="barb_toggle_desc">По умолчанию включено. Если отключить, остаётся текущий режим без движения варваров.</div>
           </div>
           <input id="barbarian-toggle" class="toggle-input" type="checkbox">
         </label>
 
-        <div class="settings-section-label top-gap">ВРЕМЯ НА ХОД</div>
+        <div class="settings-section-label top-gap" data-i18n="section_timer">ВРЕМЯ НА ХОД</div>
         <div class="time-options" id="time-options">
-          <button class="time-chip" data-t="0" ontouchstart="">Выкл</button>
+          <button class="time-chip" data-t="0" ontouchstart="" data-i18n="time_off">Выкл</button>
           <button class="time-chip" data-t="15" ontouchstart="">15с</button>
           <button class="time-chip" data-t="30" ontouchstart="">30с</button>
           <button class="time-chip" data-t="45" ontouchstart="">45с</button>
@@ -152,91 +159,91 @@
         </div>
 
         <label class="custom-time-row" for="custom-time-input">
-          <span class="mode-title">Свое время на ход</span>
+          <span class="mode-title" data-i18n="custom_time_label">Свое время на ход</span>
           <div class="custom-time-input-wrap">
-            <input id="custom-time-input" class="custom-time-input" type="number" min="0" step="5" inputmode="numeric" placeholder="сек">
-            <button id="apply-custom-time" class="small-action-btn" ontouchstart="">Применить</button>
+            <input id="custom-time-input" class="custom-time-input" type="number" min="0" step="5" inputmode="numeric" placeholder="сек" data-i18n-ph="custom_time_ph">
+            <button id="apply-custom-time" class="small-action-btn" ontouchstart="" data-i18n="apply_time">Применить</button>
           </div>
         </label>
 
-        <div class="settings-section-label top-gap">СИНХРОНИЗАЦИЯ</div>
+        <div class="settings-section-label top-gap" data-i18n="section_sync">СИНХРОНИЗАЦИЯ</div>
         <div class="sync-card">
           <div id="sync-status" class="mode-desc">Не подключено</div>
           <label class="toggle-row" for="simultaneous-toggle">
             <div>
-              <div class="mode-title">Одновременный режим</div>
-              <div class="mode-desc">Если устройств несколько, анимация броска запускается одновременно на всех.</div>
+              <div class="mode-title" data-i18n="simultaneous_title">Одновременный режим</div>
+              <div class="mode-desc" data-i18n="simultaneous_desc">Если устройств несколько, анимация броска запускается одновременно на всех.</div>
             </div>
             <input id="simultaneous-toggle" class="toggle-input" type="checkbox">
           </label>
           <div class="sync-row">
-            <button id="create-sync-btn" class="small-action-btn" ontouchstart="">Создать код</button>
-            <button id="leave-sync-btn" class="small-action-btn muted-action-btn" ontouchstart="">Отключиться</button>
+            <button id="create-sync-btn" class="small-action-btn" ontouchstart="" data-i18n="create_sync">Создать код</button>
+            <button id="leave-sync-btn" class="small-action-btn muted-action-btn" ontouchstart="" data-i18n="leave_sync">Отключиться</button>
           </div>
           <label class="custom-time-row sync-join-row" for="join-code-input">
-            <span class="mode-title">Войти по коду игры</span>
+            <span class="mode-title" data-i18n="join_label">Войти по коду игры</span>
             <div class="custom-time-input-wrap">
-              <input id="join-code-input" class="custom-time-input" type="text" inputmode="numeric" maxlength="6" placeholder="6 цифр">
-              <button id="join-sync-btn" class="small-action-btn" ontouchstart="">Войти</button>
+              <input id="join-code-input" class="custom-time-input" type="text" inputmode="numeric" maxlength="6" placeholder="6 цифр" data-i18n-ph="join_ph">
+              <button id="join-sync-btn" class="small-action-btn" ontouchstart="" data-i18n="join_btn">Войти</button>
             </div>
           </label>
         </div>
 
-        <div class="settings-section-label top-gap">ПАРТИЯ</div>
+        <div class="settings-section-label top-gap" data-i18n="section_party">ПАРТИЯ</div>
         <div class="party-actions">
-          <button id="download-log-btn" class="small-action-btn" ontouchstart="">Скачать лог игры</button>
-          <button id="continue-game-btn" class="small-action-btn muted-action-btn" ontouchstart="">Продолжить игру</button>
+          <button id="download-log-btn" class="small-action-btn" ontouchstart="" data-i18n="download_log">Скачать лог игры</button>
+          <button id="continue-game-btn" class="small-action-btn muted-action-btn" ontouchstart="" data-i18n="continue_game">Продолжить игру</button>
         </div>
-        <button id="new-game-btn" class="danger-action-btn" ontouchstart="">Новая игра</button>
+        <button id="new-game-btn" class="danger-action-btn" ontouchstart="" data-i18n="new_game">Новая игра</button>
         <input id="continue-game-input" type="file" accept=".txt,text/plain" hidden>
       </div>
-      <button id="btn-close-settings" class="btn-close-modal" ontouchstart="">ЗАКРЫТЬ</button>
+      <button id="btn-close-settings" class="btn-close-modal" ontouchstart="" data-i18n="close_btn">ЗАКРЫТЬ</button>
     </div>
   </div>
 
   <div id="history-modal" class="modal modal-hidden">
     <div class="modal-inner">
       <div class="modal-header">
-        <span class="app-title">ИСТОРИЯ ХОДОВ</span>
+        <span class="app-title" data-i18n="history_modal_title">ИСТОРИЯ ХОДОВ</span>
         <button id="btn-history-x" class="btn-x" ontouchstart="">✕</button>
       </div>
       <div class="divider"></div>
       <div class="modal-body">
-        <div class="settings-section-label">РЕДАКТИРОВАНИЕ СОСТОЯНИЯ</div>
+        <div class="settings-section-label" data-i18n="section_edit">РЕДАКТИРОВАНИЕ СОСТОЯНИЯ</div>
         <div class="history-controls">
-          <button id="undo-last-btn" class="small-action-btn" ontouchstart="">Удалить последний ход</button>
+          <button id="undo-last-btn" class="small-action-btn" ontouchstart="" data-i18n="undo_btn">Удалить последний ход</button>
         </div>
 
-        <div class="settings-section-label top-gap">ТЕКУЩЕЕ ПОЛОЖЕНИЕ ВАРВАРОВ</div>
+        <div class="settings-section-label top-gap" data-i18n="section_barb_pos">ТЕКУЩЕЕ ПОЛОЖЕНИЕ ВАРВАРОВ</div>
         <div id="barbarian-position-options" class="position-grid"></div>
 
-        <div class="settings-section-label top-gap">ВСЯ ИСТОРИЯ</div>
+        <div class="settings-section-label top-gap" data-i18n="section_full_history">ВСЯ ИСТОРИЯ</div>
         <div id="full-history" class="full-history"></div>
       </div>
-      <button id="btn-close-history" class="btn-close-modal" ontouchstart="">ЗАКРЫТЬ</button>
+      <button id="btn-close-history" class="btn-close-modal" ontouchstart="" data-i18n="close_btn">ЗАКРЫТЬ</button>
     </div>
   </div>
 
   <div id="alchemist-modal" class="modal modal-hidden">
     <div class="modal-inner">
       <div class="modal-header">
-        <span class="app-title">АЛХИМИК</span>
+        <span class="app-title" data-i18n="alchemist_modal_title">АЛХИМИК</span>
         <button id="btn-alchemist-x" class="btn-x" ontouchstart="">✕</button>
       </div>
       <div class="divider"></div>
       <div class="modal-body">
-        <div class="mode-desc alchemist-note">Выберите значения двух кубиков. Ход выполняется стандартно, но не попадает в общую статистику и не продвигает колоду 36 комбинаций.</div>
+        <div class="mode-desc alchemist-note" data-i18n="alchemist_note">Выберите значения двух кубиков. Ход выполняется стандартно, но не попадает в общую статистику и не продвигает колоду 36 комбинаций.</div>
 
-        <div class="settings-section-label top-gap">ПЕРВЫЙ КУБИК</div>
+        <div class="settings-section-label top-gap" data-i18n="section_die1">ПЕРВЫЙ КУБИК</div>
         <div id="alchemy-die1" class="position-grid"></div>
 
-        <div class="settings-section-label top-gap">ВТОРОЙ КУБИК</div>
-        <div class="mode-desc alchemist-die-note">Красный кубик, влияющий на получение карт развития.</div>
+        <div class="settings-section-label top-gap" data-i18n="section_die2">ВТОРОЙ КУБИК</div>
+        <div class="mode-desc alchemist-die-note" data-i18n="die2_note">Красный кубик, влияющий на получение карт развития.</div>
         <div id="alchemy-die2" class="position-grid"></div>
 
-        <button id="apply-alchemist-btn" class="btn-roll alchemist-apply" ontouchstart="">Применить алхимика</button>
+        <button id="apply-alchemist-btn" class="btn-roll alchemist-apply" ontouchstart="" data-i18n="apply_alchemist">Применить алхимика</button>
       </div>
-      <button id="btn-close-alchemist" class="btn-close-modal" ontouchstart="">ЗАКРЫТЬ</button>
+      <button id="btn-close-alchemist" class="btn-close-modal" ontouchstart="" data-i18n="close_btn">ЗАКРЫТЬ</button>
     </div>
   </div>
 

@@ -81,6 +81,261 @@ const DICE_SIZE = (() => {
   return side;
 })();
 
+// ─── i18n ────────────────────────────────────────────────────────────────────
+
+const TRANSLATIONS = {
+  ru: {
+    page_title: 'Катан — Кубики',
+    app_title: 'КАТАН',
+    timer_lbl: 'ХОД',
+    pause_btn: 'ПАУЗА',
+    play_btn: 'ПЛЕЙ',
+    event_name_initial: 'Нажмите кнопку',
+    event_sub_initial: 'чтобы начать',
+    alchemist_btn: 'Алхимик',
+    roll_btn: 'БРОСИТЬ КУБИКИ',
+    stat_btn: 'СТАТ',
+    history_btn: 'ИСТ',
+    history_card_title: 'Последние ходы',
+    no_turns: 'Нет ходов',
+    barb_off: 'Варвары: выкл',
+    barb_pos: n => n === 0 ? 'Варвары: старт' : `Варвары: ${n}`,
+    stats_modal_title: 'СТАТИСТИКА',
+    close_btn: 'ЗАКРЫТЬ',
+    no_stats: 'Нет данных по статистике',
+    stat_time: 'ВРЕМЯ', stat_turns: 'ХОДОВ', stat_avg: 'СРЕДНЕЕ', stat_dev: 'ОТКЛ',
+    stats_dist: 'РАСПРЕДЕЛЕНИЕ СУММ',
+    stats_events: 'СОБЫТИЯ',
+    tbl_event: 'СОБЫТИЕ', tbl_count: 'КОЛ', tbl_fact: 'ФАКТ%', tbl_theory: 'ТЕОР%',
+    tbl_total: 'ИТОГО', stats_detail: 'ДЕТАЛЬНО ПО СУММАМ',
+    tbl_sum: 'СУМ', tbl_dev: 'ОТКЛ%',
+    chart_fact: 'факт', chart_theory: 'теория',
+    section_lang: 'ЯЗЫК / МОВА',
+    settings_modal_title: 'НАСТРОЙКИ',
+    section_dice: 'РЕЖИМ КУБИКОВ',
+    mode_random_title: 'Случайный',
+    mode_random_desc: 'Каждый бросок независим.',
+    mode_exhaust_title: 'Выбивание — 36 комбинаций',
+    mode_exhaust_desc: 'Все 36 сочетаний 1+1…6+6 проходят по одному разу, затем новая колода.',
+    section_events: 'РЕЖИМ СОБЫТИЙ',
+    ev_random_title: 'Случайный',
+    ev_random_desc: 'Каждое событие выбирается случайно.',
+    ev_exhaust_title: 'Выбивание — 6 карточек',
+    ev_exhaust_desc: 'Торговля, Политика, Учёность и 3 карты варваров идут по одной до нового перемешивания.',
+    section_barb: 'ВАРВАРЫ',
+    barb_toggle_title: 'Передвигать варваров',
+    barb_toggle_desc: 'По умолчанию включено. Если отключить, остаётся текущий режим без движения варваров.',
+    section_timer: 'ВРЕМЯ НА ХОД',
+    time_off: 'Выкл',
+    custom_time_label: 'Свое время на ход',
+    custom_time_ph: 'сек',
+    apply_time: 'Применить',
+    section_sync: 'СИНХРОНИЗАЦИЯ',
+    simultaneous_title: 'Одновременный режим',
+    simultaneous_desc: 'Если устройств несколько, анимация броска запускается одновременно на всех.',
+    create_sync: 'Создать код',
+    leave_sync: 'Отключиться',
+    join_label: 'Войти по коду игры',
+    join_ph: '6 цифр',
+    join_btn: 'Войти',
+    section_party: 'ПАРТИЯ',
+    download_log: 'Скачать лог игры',
+    continue_game: 'Продолжить игру',
+    new_game: 'Новая игра',
+    history_modal_title: 'ИСТОРИЯ ХОДОВ',
+    section_edit: 'РЕДАКТИРОВАНИЕ СОСТОЯНИЯ',
+    undo_btn: 'Удалить последний ход',
+    section_barb_pos: 'ТЕКУЩЕЕ ПОЛОЖЕНИЕ ВАРВАРОВ',
+    section_full_history: 'ВСЯ ИСТОРИЯ',
+    no_turns_yet: 'Пока нет ходов',
+    alchemist_modal_title: 'АЛХИМИК',
+    alchemist_note: 'Выберите значения двух кубиков. Ход выполняется стандартно, но не попадает в общую статистику и не продвигает колоду 36 комбинаций.',
+    section_die1: 'ПЕРВЫЙ КУБИК',
+    section_die2: 'ВТОРОЙ КУБИК',
+    die2_note: 'Красный кубик, влияющий на получение карт развития.',
+    apply_alchemist: 'Применить алхимика',
+    ev_trade_name: 'Торговля',    ev_trade_sub: 'Ткань (Шерсть)',
+    ev_politics_name: 'Политика', ev_politics_sub: 'Монеты (Руда)',
+    ev_science_name: 'Учёность',  ev_science_sub: 'Бумага (Дерево)',
+    ev_barbarians_name: 'Варвары!', ev_barbarians_sub: '',
+    ev_barbarians_short: 'Варв',
+    ev_barbarians_display: 'Варвары',
+    barb_start_pos: pos => `Позиция: ${pos}`,
+    barb_start_label: 'Стартовое положение',
+    roll_count: n => `Ходов: ${n}`,
+    deck_dice: i => `Кубики ${i}/36`,
+    deck_events: i => `События ${i}/6`,
+    sync_unavailable: 'Синхронизация недоступна',
+    sync_waiting: 'Ожидание восстановления устройства...',
+    sync_paused: 'Синхронизация приостановлена',
+    sync_disconnected: 'Не подключено',
+    sync_code: code => `Код игры: ${code}`,
+    toast_sync_lost: 'Синхронизация потеряна. Действия временно заблокированы.',
+    toast_device_back: 'Устройство восстановило соединение. Игра продолжается.',
+    toast_device_lost: 'Одно из устройств пропало. Ожидание восстановления 10 сек...',
+    toast_device_removed_ok: 'Устройство удалено из игры. Можно продолжать.',
+    toast_device_removed: 'Устройство удалено из игры.',
+    toast_devices_count: n => `Устройств в игре: ${n}`,
+    toast_code_created: code => `Код игры создан: ${code}`,
+    toast_joined: code => `Устройство подключено к игре ${code}`,
+    toast_sync_off: 'Синхронизация отключена',
+    toast_log_saved: 'Лог игры скачан',
+    toast_log_loaded: 'Игра восстановлена из лога',
+    toast_internet_lost: 'Интернет пропал. Действия заблокированы до восстановления синхронизации.',
+    confirm_replace: 'Текущая игра будет потеряна. Продолжить?',
+    confirm_load_log: 'Текущая игра будет потеряна. Загрузить игру из лог-файла?',
+    confirm_new_game: 'Текущая игра будет потеряна. Начать новую игру?',
+    alert_create_failed: 'Не удалось создать код игры.',
+    alert_join_failed: 'Не удалось подключиться к игре по этому коду.',
+    turn_alchemist: 'Алхимик',
+    turn_no_stat: ' • без статистики',
+    turn_elapsed: s => ` • ${s}с`,
+    turn_barb: pos => ` • варвары ${pos}`,
+    log_header: 'Лог игры Catan Cities & Knights',
+    log_export: date => `Экспорт: ${date}`,
+    log_turns: n => `Ходов: ${n}`,
+    log_history: 'История:',
+    log_no_turns: 'Ходов пока нет',
+    log_locale: 'ru-RU',
+  },
+  uk: {
+    page_title: 'Катан — Кубики',
+    app_title: 'КАТАН',
+    timer_lbl: 'ХІД',
+    pause_btn: 'ПАУЗА',
+    play_btn: 'ГРАТИ',
+    event_name_initial: 'Натисніть кнопку',
+    event_sub_initial: 'щоб почати',
+    alchemist_btn: 'Алхімік',
+    roll_btn: 'КИНУТИ КУБИКИ',
+    stat_btn: 'СТАТ',
+    history_btn: 'ІСТ',
+    history_card_title: 'Останні ходи',
+    no_turns: 'Немає ходів',
+    barb_off: 'Варвари: вимк',
+    barb_pos: n => n === 0 ? 'Варвари: старт' : `Варвари: ${n}`,
+    stats_modal_title: 'СТАТИСТИКА',
+    close_btn: 'ЗАКРИТИ',
+    no_stats: 'Немає даних зі статистики',
+    stat_time: 'ЧАС', stat_turns: 'ХОДІВ', stat_avg: 'СЕРЕДНЄ', stat_dev: 'ВІДХ',
+    stats_dist: 'РОЗПОДІЛ СУМ',
+    stats_events: 'ПОДІЇ',
+    tbl_event: 'ПОДІЯ', tbl_count: 'К-ТЬ', tbl_fact: 'ФАКТ%', tbl_theory: 'ТЕОР%',
+    tbl_total: 'РАЗОМ', stats_detail: 'ДЕТАЛЬНО ЗА СУМАМИ',
+    tbl_sum: 'СУМ', tbl_dev: 'ВІДХ%',
+    chart_fact: 'факт', chart_theory: 'теорія',
+    section_lang: 'ЯЗЫК / МОВА',
+    settings_modal_title: 'НАЛАШТУВАННЯ',
+    section_dice: 'РЕЖИМ КУБИКІВ',
+    mode_random_title: 'Випадковий',
+    mode_random_desc: 'Кожен кидок незалежний.',
+    mode_exhaust_title: 'Вибивання — 36 комбінацій',
+    mode_exhaust_desc: 'Усі 36 поєднань 1+1…6+6 проходять по одному разу, потім нова колода.',
+    section_events: 'РЕЖИМ ПОДІЙ',
+    ev_random_title: 'Випадковий',
+    ev_random_desc: 'Кожна подія вибирається випадково.',
+    ev_exhaust_title: 'Вибивання — 6 карток',
+    ev_exhaust_desc: 'Торгівля, Політика, Вченість і 3 карти варварів ідуть по одній до нового перемішування.',
+    section_barb: 'ВАРВАРИ',
+    barb_toggle_title: 'Пересувати варварів',
+    barb_toggle_desc: 'За замовчуванням увімкнено. Якщо вимкнути, поточний режим залишається без руху варварів.',
+    section_timer: 'ЧАС НА ХІД',
+    time_off: 'Вимк',
+    custom_time_label: 'Свій час на хід',
+    custom_time_ph: 'сек',
+    apply_time: 'Застосувати',
+    section_sync: 'СИНХРОНІЗАЦІЯ',
+    simultaneous_title: 'Одночасний режим',
+    simultaneous_desc: 'Якщо пристроїв кілька, анімація кидка запускається одночасно на всіх.',
+    create_sync: 'Створити код',
+    leave_sync: 'Відключитися',
+    join_label: 'Увійти за кодом гри',
+    join_ph: '6 цифр',
+    join_btn: 'Увійти',
+    section_party: 'ПАРТІЯ',
+    download_log: 'Завантажити лог гри',
+    continue_game: 'Продовжити гру',
+    new_game: 'Нова гра',
+    history_modal_title: 'ІСТОРІЯ ХОДІВ',
+    section_edit: 'РЕДАГУВАННЯ СТАНУ',
+    undo_btn: 'Видалити останній хід',
+    section_barb_pos: 'ПОТОЧНЕ ПОЛОЖЕННЯ ВАРВАРІВ',
+    section_full_history: 'ВСЯ ІСТОРІЯ',
+    no_turns_yet: 'Поки немає ходів',
+    alchemist_modal_title: 'АЛХІМІК',
+    alchemist_note: 'Оберіть значення двох кубиків. Хід виконується стандартно, але не потрапляє до загальної статистики і не просуває колоду 36 комбінацій.',
+    section_die1: 'ПЕРШИЙ КУБИК',
+    section_die2: 'ДРУГИЙ КУБИК',
+    die2_note: 'Червоний кубик, що впливає на отримання карт розвитку.',
+    apply_alchemist: 'Застосувати алхіміка',
+    ev_trade_name: 'Торгівля',    ev_trade_sub: 'Тканина (Вовна)',
+    ev_politics_name: 'Політика', ev_politics_sub: 'Монети (Руда)',
+    ev_science_name: 'Вченість',  ev_science_sub: 'Папір (Дерево)',
+    ev_barbarians_name: 'Варвари!', ev_barbarians_sub: '',
+    ev_barbarians_short: 'Варв',
+    ev_barbarians_display: 'Варвари',
+    barb_start_pos: pos => `Позиція: ${pos}`,
+    barb_start_label: 'Початкове положення',
+    roll_count: n => `Ходів: ${n}`,
+    deck_dice: i => `Кубики ${i}/36`,
+    deck_events: i => `Події ${i}/6`,
+    sync_unavailable: 'Синхронізація недоступна',
+    sync_waiting: 'Очікування відновлення пристрою...',
+    sync_paused: 'Синхронізацію призупинено',
+    sync_disconnected: 'Не підключено',
+    sync_code: code => `Код гри: ${code}`,
+    toast_sync_lost: 'Синхронізацію втрачено. Дії тимчасово заблоковані.',
+    toast_device_back: "Пристрій відновив з'єднання. Гра продовжується.",
+    toast_device_lost: 'Один з пристроїв зник. Очікування відновлення 10 сек...',
+    toast_device_removed_ok: 'Пристрій видалено з гри. Можна продовжувати.',
+    toast_device_removed: 'Пристрій видалено з гри.',
+    toast_devices_count: n => `Пристроїв у грі: ${n}`,
+    toast_code_created: code => `Код гри створено: ${code}`,
+    toast_joined: code => `Пристрій підключено до гри ${code}`,
+    toast_sync_off: 'Синхронізацію вимкнено',
+    toast_log_saved: 'Лог гри завантажено',
+    toast_log_loaded: 'Гру відновлено з логу',
+    toast_internet_lost: 'Інтернет зник. Дії заблоковані до відновлення синхронізації.',
+    confirm_replace: 'Поточну гру буде втрачено. Продовжити?',
+    confirm_load_log: 'Поточну гру буде втрачено. Завантажити гру з лог-файлу?',
+    confirm_new_game: 'Поточну гру буде втрачено. Почати нову гру?',
+    alert_create_failed: 'Не вдалося створити код гри.',
+    alert_join_failed: 'Не вдалося підключитися до гри за цим кодом.',
+    turn_alchemist: 'Алхімік',
+    turn_no_stat: ' • без статистики',
+    turn_elapsed: s => ` • ${s}с`,
+    turn_barb: pos => ` • варвари ${pos}`,
+    log_header: 'Лог гри Catan Cities & Knights',
+    log_export: date => `Експорт: ${date}`,
+    log_turns: n => `Ходів: ${n}`,
+    log_history: 'Історія:',
+    log_no_turns: 'Ходів поки немає',
+    log_locale: 'uk-UA',
+  },
+};
+
+function t(key, ...args) {
+  const dict = TRANSLATIONS[state?.lang] ?? TRANSLATIONS.ru;
+  const val = dict[key] ?? TRANSLATIONS.ru[key] ?? key;
+  return typeof val === 'function' ? val(...args) : val;
+}
+
+function applyTranslations() {
+  document.title = t('page_title');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPh);
+  });
+  // Update lang chip active state
+  document.querySelectorAll('.lang-chip').forEach(btn => {
+    btn.classList.toggle('lang-chip-active', btn.dataset.lang === state.lang);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 const state = {
   locked: false,
   turns: [],
@@ -116,6 +371,7 @@ const state = {
   syncDeviceLabels: [],
   syncNetworkOk: true,
   syncRecoveryTimer: null,
+  lang: localStorage.getItem('catan-lang') || 'ru',
   simultaneousMode: true,
   pendingCue: null,
   cueTimeout: null,
@@ -483,11 +739,11 @@ function syncAvailable() {
 }
 
 function syncStatusText() {
-  if (!syncAvailable()) return 'Синхронизация недоступна';
-  if (state.syncRecoveryTimer !== null) return 'Ожидание восстановления устройства...';
-  if (isStrictSyncBlocked()) return 'Синхронизация приостановлена';
-  if (!state.syncConnected) return 'Не подключено';
-  return `Код игры: ${state.syncCode}`;
+  if (!syncAvailable()) return t('sync_unavailable');
+  if (state.syncRecoveryTimer !== null) return t('sync_waiting');
+  if (isStrictSyncBlocked()) return t('sync_paused');
+  if (!state.syncConnected) return t('sync_disconnected');
+  return t('sync_code', state.syncCode);
 }
 
 function renderSyncUI() {
@@ -528,7 +784,7 @@ function updateStrictSyncUiState() {
 
 function guardStrictSyncAction() {
   if (!isStrictSyncBlocked()) return true;
-  showToast('Синхронизация потеряна. Действия временно заблокированы.');
+  showToast(t('toast_sync_lost'));
   return false;
 }
 
@@ -545,7 +801,7 @@ function updateSyncPresence(count, labels = [], serverExpected = 0) {
     clearTimeout(state.syncRecoveryTimer);
     state.syncRecoveryTimer = null;
     if (state.syncConnected) {
-      showToast('Устройство восстановило соединение. Игра продолжается.');
+      showToast(t('toast_device_back'));
       specificToast = true;
     }
   }
@@ -563,15 +819,15 @@ function updateSyncPresence(count, labels = [], serverExpected = 0) {
     && state.syncExpectedParticipants > 1
     && state.syncParticipantCount < state.syncExpectedParticipants
     && state.syncRecoveryTimer === null) {
-    showToast('Одно из устройств пропало. Ожидание восстановления 10 сек...');
+    showToast(t('toast_device_lost'));
     specificToast = true;
     state.syncRecoveryTimer = setTimeout(() => {
       state.syncRecoveryTimer = null;
       state.syncExpectedParticipants = state.syncParticipantCount;
       if (state.syncNetworkOk) {
-        showToast('Устройство удалено из игры. Можно продолжать.');
+        showToast(t('toast_device_removed_ok'));
       } else {
-        showToast('Устройство удалено из игры.');
+        showToast(t('toast_device_removed'));
       }
       renderSyncUI();
       updateStrictSyncUiState();
@@ -583,7 +839,7 @@ function updateSyncPresence(count, labels = [], serverExpected = 0) {
 
   // Generic count-change toast only when no specific toast was shown
   if (!specificToast && state.syncConnected && prev > 0 && state.syncParticipantCount !== prev) {
-    showToast(`Устройств в игре: ${state.syncParticipantCount}`);
+    showToast(t('toast_devices_count', state.syncParticipantCount));
   }
 
   renderSyncUI();
@@ -837,7 +1093,7 @@ async function createSyncSession() {
   state.syncExpectedParticipants = Math.max(1, Number(data.expectedParticipants || data.participantCount || 1));
   updateSyncPresence(data.participantCount, data.deviceLabels, data.expectedParticipants);
   startSyncPolling();
-  showToast(`Код игры создан: ${data.code}`);
+  showToast(t('toast_code_created', data.code));
   document.getElementById('join-code-input').value = data.code;
 }
 
@@ -856,7 +1112,7 @@ async function joinSyncSession(code) {
   if (data.gameState) hydrateState(data.gameState);
   updateSyncPresence(data.participantCount, data.deviceLabels, data.expectedParticipants);
   startSyncPolling();
-  showToast(`Устройство подключено к игре ${normalized}`);
+  showToast(t('toast_joined', normalized));
   document.getElementById('join-code-input').value = normalized;
 }
 
@@ -876,7 +1132,7 @@ function leaveSyncSession() {
   document.getElementById('join-code-input').value = '';
   renderSyncUI();
   updateStrictSyncUiState();
-  showToast('Синхронизация отключена');
+  showToast(t('toast_sync_off'));
 }
 
 function drawChoiceGrid(containerId, selectedValue, onClick) {
@@ -906,15 +1162,14 @@ function renderBarbarianPositionGrid() {
 }
 
 function turnDescription(turn) {
-  const event = EVENT_DEFS[turn.eventKey];
-  const label = turn.alchemist ? 'Алхимик' : `#${turn.number}`;
+  const label = turn.alchemist ? t('turn_alchemist') : `#${turn.number}`;
   const eventLabel = turn.eventKey === 'barbarians'
-    ? event.name
-    : `${event.name} (${turn.d2})`;
-  const counted = turn.counted ? '' : ' • без статистики';
-  const think = turn.elapsed !== null ? ` • ${turn.elapsed}с` : '';
+    ? t('ev_barbarians_name')
+    : `${t('ev_' + turn.eventKey + '_name')} (${turn.d2})`;
+  const counted = turn.counted ? '' : t('turn_no_stat');
+  const think = turn.elapsed !== null ? t('turn_elapsed', turn.elapsed) : '';
   const barb = turn.barbarianPositionAfter > 0 && state.barbarianTracking
-    ? ` • варвары ${turn.barbarianPositionAfter}`
+    ? t('turn_barb', turn.barbarianPositionAfter)
     : '';
   return `${label} • ${eventLabel} • ${turn.d1}+${turn.d2}=${turn.total}${think}${counted}${barb}`;
 }
@@ -931,7 +1186,8 @@ function hasMeaningfulGameState() {
     || state.timerPaused;
 }
 
-function confirmReplacingCurrentGame(message = 'Текущая игра будет потеряна. Продолжить?') {
+function confirmReplacingCurrentGame(message = null) {
+  message = message ?? t('confirm_replace');
   if (!hasMeaningfulGameState()) return true;
   return window.confirm(message);
 }
@@ -946,13 +1202,13 @@ function buildGameLogText() {
   };
   const historyLines = state.turns.length
     ? state.turns.map(turn => turnDescription(turn))
-    : ['Ходов пока нет'];
+    : [t('log_no_turns')];
   return [
-    'Лог игры Catan Cities & Knights',
-    `Экспорт: ${new Date().toLocaleString('ru-RU')}`,
-    `Ходов: ${state.turns.length}`,
+    t('log_header'),
+    t('log_export', new Date().toLocaleString(t('log_locale'))),
+    t('log_turns', state.turns.length),
     '',
-    'История:',
+    t('log_history'),
     ...historyLines,
     '',
     '--- SNAPSHOT ---',
@@ -971,7 +1227,7 @@ function downloadGameLog() {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  showToast('Лог игры скачан');
+  showToast(t('toast_log_saved'));
 }
 
 function extractImportedState(text) {
@@ -992,7 +1248,7 @@ async function importGameLog(file) {
   const importedState = extractImportedState(text);
   hydrateState(importedState);
   pushStateToSync(true).catch(() => {});
-  showToast('Игра восстановлена из лога');
+  showToast(t('toast_log_loaded'));
 }
 
 function renderHistory() {
@@ -1002,17 +1258,17 @@ function renderHistory() {
     ? recent.map(turn => {
       const event = EVENT_DEFS[turn.eventKey];
       const eventLabel = turn.eventKey === 'barbarians'
-        ? 'Варв'
-        : `${event.name.slice(0, 4)} (${turn.d2})`;
+        ? t('ev_barbarians_short')
+        : `${t('ev_' + turn.eventKey + '_name').slice(0, 4)} (${turn.d2})`;
       return `<div class="recent-turn-chip">
         <div class="recent-turn-top">#${turn.number} ${turn.d1}+${turn.d2}</div>
         <div class="recent-turn-bottom">${eventLabel}</div>
       </div>`;
     }).join('')
-    : '<div class="no-data">Нет ходов</div>';
+    : `<div class="no-data">${t('no_turns')}</div>`;
   const barbMeta = state.barbarianTracking
-    ? `Варвары: ${state.barbarianPosition === 0 ? 'старт' : state.barbarianPosition}`
-    : 'Варвары: выкл';
+    ? t('barb_pos', state.barbarianPosition)
+    : t('barb_off');
   document.getElementById('history-meta').textContent = barbMeta;
 }
 
@@ -1020,7 +1276,7 @@ function renderHistoryModal() {
   renderBarbarianPositionGrid();
   const fullHistory = document.getElementById('full-history');
   if (state.turns.length === 0) {
-    fullHistory.innerHTML = '<div class="no-data">Пока нет ходов</div>';
+    fullHistory.innerHTML = `<div class="no-data">${t('no_turns_yet')}</div>`;
     return;
   }
   fullHistory.innerHTML = [...state.turns]
@@ -1030,13 +1286,13 @@ function renderHistoryModal() {
 }
 
 function renderRollCount() {
-  document.getElementById('roll-count').textContent = `Ходов: ${state.turns.length}`;
+  document.getElementById('roll-count').textContent = t('roll_count', state.turns.length);
 }
 
 function renderCounters(lastTurn = null) {
   const headerParts = [];
-  if (state.rollMode === 'exhaust') headerParts.push(`Кубики ${state.exhaustIdx}/36`);
-  if (state.eventMode === 'exhaust') headerParts.push(`События ${state.eventIdx}/6`);
+  if (state.rollMode === 'exhaust') headerParts.push(t('deck_dice', state.exhaustIdx));
+  if (state.eventMode === 'exhaust') headerParts.push(t('deck_events', state.eventIdx));
   document.getElementById('deck-counter').innerHTML = headerParts.length ? headerParts.join(' · ') : '&nbsp;';
 }
 
@@ -1056,8 +1312,8 @@ function makeEventView(turn) {
 
   return {
     eventKey: turn.eventKey,
-    name: isBarbarians ? 'Варвары!' : `${event.name} (${turn.d2})`,
-    sub: event.sub || '\u00A0',
+    name: isBarbarians ? t('ev_barbarians_name') : `${t('ev_' + turn.eventKey + '_name')} (${turn.d2})`,
+    sub: t('ev_' + turn.eventKey + '_sub') || '\u00A0',
     color: event.color,
     image: img,
     barbarianImage: isBarbarians && state.barbarianTracking ? img : '',
@@ -1096,8 +1352,8 @@ function renderStartEventState() {
       : imageUrl('barbarians1_start.png');
     imgEl.classList.add('shown');
     document.getElementById('event-placeholder').classList.add('hidden');
-    document.getElementById('event-name').textContent = 'Варвары';
-    document.getElementById('event-sub').textContent = state.barbarianPosition > 0 ? `Позиция: ${state.barbarianPosition}` : 'Стартовое положение';
+    document.getElementById('event-name').textContent = t('ev_barbarians_display');
+    document.getElementById('event-sub').textContent = state.barbarianPosition > 0 ? t('barb_start_pos', state.barbarianPosition) : t('barb_start_label');
     document.getElementById('event-name').style.color = uiColor;
     document.getElementById('event-sub').style.color = uiColor;
     document.getElementById('event-section').style.borderColor = EVENT_DEFS.barbarians.color;
@@ -1107,8 +1363,8 @@ function renderStartEventState() {
     imgEl.removeAttribute('src');
     imgEl.classList.remove('shown');
     document.getElementById('event-placeholder').classList.remove('hidden');
-    document.getElementById('event-name').textContent = 'Нажмите кнопку';
-    document.getElementById('event-sub').textContent = 'чтобы начать';
+    document.getElementById('event-name').textContent = t('event_name_initial');
+    document.getElementById('event-sub').textContent = t('event_sub_initial');
     document.getElementById('event-name').style.color = EVENT_DEFS.trade.color;
     document.getElementById('event-sub').style.color = '';
     document.getElementById('event-section').style.borderColor = 'var(--border)';
@@ -1290,7 +1546,7 @@ function renderStats() {
   const countedTurns = getCountedTurns();
   const n = countedTurns.length;
   if (n === 0) {
-    body.innerHTML = '<div class="no-data">Нет данных по статистике</div>';
+    body.innerHTML = `<div class="no-data">${t('no_stats')}</div>`;
     return;
   }
 
@@ -1311,23 +1567,23 @@ function renderStats() {
 
   body.innerHTML = `
     <div class="stats-row-4">
-      <div class="stat-cell"><div class="stat-label">ВРЕМЯ</div><div class="stat-val">${Math.floor(totalThink / 60)}:${String(totalThink % 60).padStart(2, '0')}</div></div>
-      <div class="stat-cell"><div class="stat-label">ХОДОВ</div><div class="stat-val">${n}</div></div>
-      <div class="stat-cell"><div class="stat-label">СРЕДНЕЕ</div><div class="stat-val">${avg.toFixed(1)}</div></div>
-      <div class="stat-cell"><div class="stat-label">ОТКЛ</div><div class="stat-val" style="color:${diffCol}">${sign}${diff.toFixed(1)}</div></div>
+      <div class="stat-cell"><div class="stat-label">${t('stat_time')}</div><div class="stat-val">${Math.floor(totalThink / 60)}:${String(totalThink % 60).padStart(2, '0')}</div></div>
+      <div class="stat-cell"><div class="stat-label">${t('stat_turns')}</div><div class="stat-val">${n}</div></div>
+      <div class="stat-cell"><div class="stat-label">${t('stat_avg')}</div><div class="stat-val">${avg.toFixed(1)}</div></div>
+      <div class="stat-cell"><div class="stat-label">${t('stat_dev')}</div><div class="stat-val" style="color:${diffCol}">${sign}${diff.toFixed(1)}</div></div>
     </div>
-    <div class="stats-section-label">РАСПРЕДЕЛЕНИЕ СУММ</div>
+    <div class="stats-section-label">${t('stats_dist')}</div>
     <div class="chart-wrap"><canvas id="stats-chart"></canvas></div>
-    <div class="stats-section-label">СОБЫТИЯ</div>
+    <div class="stats-section-label">${t('stats_events')}</div>
     <div class="tbl-events">
-      <div class="tbl-head"><span>СОБЫТИЕ</span><span>КОЛ</span><span>ФАКТ%</span><span>ТЕОР%</span></div>
+      <div class="tbl-head"><span>${t('tbl_event')}</span><span>${t('tbl_count')}</span><span>${t('tbl_fact')}</span><span>${t('tbl_theory')}</span></div>
       ${eventsRows()}
       <div class="tbl-sep"></div>
-      <div class="tbl-total"><span>ИТОГО</span><span>${n}</span></div>
+      <div class="tbl-total"><span>${t('tbl_total')}</span><span>${n}</span></div>
     </div>
-    <div class="stats-section-label">ДЕТАЛЬНО ПО СУММАМ</div>
+    <div class="stats-section-label">${t('stats_detail')}</div>
     <div class="tbl-detail">
-      <div class="tbl-head"><span>СУМ</span><span>КОЛ</span><span>ФАКТ%</span><span>ТЕОР%</span><span>ОТКЛ%</span></div>
+      <div class="tbl-head"><span>${t('tbl_sum')}</span><span>${t('tbl_count')}</span><span>${t('tbl_fact')}</span><span>${t('tbl_theory')}</span><span>${t('tbl_dev')}</span></div>
       ${detailRows(counts, n)}
     </div>`;
 
@@ -1344,7 +1600,7 @@ function eventsRows() {
     const th = EVENT_THEORY[key] || 0;
     const color = evTableColor(key);
     return `<div class="tbl-row">
-      <span style="color:${color}">${event.name}</span>
+      <span style="color:${color}">${t('ev_' + key + '_name')}</span>
       <span>${count}</span>
       <span style="color:${color}">${pct.toFixed(0)}%</span>
       <span style="color:var(--dim)">${th.toFixed(0)}%</span>
@@ -1437,7 +1693,7 @@ function drawChart(counts, n, maxPct) {
   ctx.fillRect(W - 90, 5, 12, 8);
   ctx.fillStyle = p.dim;
   ctx.textAlign = 'left';
-  ctx.fillText('факт', W - 76, 13);
+  ctx.fillText(t('chart_fact'), W - 76, 13);
 
   ctx.strokeStyle = p.theory;
   ctx.lineWidth = 3;
@@ -1446,7 +1702,7 @@ function drawChart(counts, n, maxPct) {
   ctx.lineTo(W - 32, 9);
   ctx.stroke();
   ctx.fillStyle = p.dim;
-  ctx.fillText('теория', W - 30, 13);
+  ctx.fillText(t('chart_theory'), W - 30, 13);
 }
 
 function renderDie(canvas, value, color, highlight, ox = 0, oy = 0) {
@@ -1584,22 +1840,22 @@ function init() {
     try {
       await createSyncSession();
     } catch (error) {
-      window.alert('Не удалось создать код игры.');
+      window.alert(t('alert_create_failed'));
     }
   });
   document.getElementById('join-sync-btn').addEventListener('click', async () => {
     const code = document.getElementById('join-code-input').value;
-    if (!confirmReplacingCurrentGame('Текущая игра не сохранится. Подключиться к игре по коду?')) return;
+    if (!confirmReplacingCurrentGame(t('confirm_replace'))) return;
     try {
       await joinSyncSession(code);
     } catch (error) {
-      window.alert('Не удалось подключиться к игре по этому коду.');
+      window.alert(t('alert_join_failed'));
     }
   });
   document.getElementById('leave-sync-btn').addEventListener('click', leaveSyncSession);
   document.getElementById('download-log-btn').addEventListener('click', downloadGameLog);
   document.getElementById('continue-game-btn').addEventListener('click', () => {
-    if (!confirmReplacingCurrentGame('Текущая игра будет потеряна. Загрузить игру из лог-файла?')) return;
+    if (!confirmReplacingCurrentGame(t('confirm_load_log'))) return;
     document.getElementById('continue-game-input').click();
   });
   document.getElementById('continue-game-input').addEventListener('change', async e => {
@@ -1609,11 +1865,11 @@ function init() {
     try {
       await importGameLog(file);
     } catch (error) {
-      window.alert('Не удалось загрузить игру из этого файла.');
+      window.alert(t('alert_join_failed'));
     }
   });
   document.getElementById('new-game-btn').addEventListener('click', () => {
-    if (!confirmReplacingCurrentGame('Текущая игра будет потеряна. Начать новую игру?')) return;
+    if (!confirmReplacingCurrentGame(t('confirm_new_game'))) return;
     resetGame();
   });
   document.getElementById('undo-last-btn').addEventListener('click', undoLastTurn);
@@ -1631,6 +1887,24 @@ function init() {
   document.getElementById('btn-close-history').addEventListener('click', () => closeModal('history-modal'));
   document.getElementById('btn-close-alchemist').addEventListener('click', () => closeModal('alchemist-modal'));
 
+  // Language switcher
+  document.querySelectorAll('.lang-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.lang = btn.dataset.lang;
+      localStorage.setItem('catan-lang', state.lang);
+      applyTranslations();
+      renderRollCount();
+      renderCounters();
+      renderHistory();
+      if (state.lastEventView) renderEventState(state.lastEventView);
+      else renderStartEventState();
+      renderSyncUI();
+      if (!document.getElementById('stats-modal').classList.contains('modal-hidden')) renderStats();
+      if (!document.getElementById('history-modal').classList.contains('modal-hidden')) renderHistoryModal();
+    });
+  });
+
+  applyTranslations();
   renderAlchemySelectors();
   refreshSettingsUI();
   renderRollCount();
@@ -1667,7 +1941,7 @@ function renderAlchemySelectors() {
     renderSyncUI();
     updateStrictSyncUiState();
     if (state.syncConnected && state.syncExpectedParticipants > 1) {
-      showToast('Интернет пропал. Действия заблокированы до восстановления синхронизации.');
+      showToast(t('toast_internet_lost'));
     }
   });
 
