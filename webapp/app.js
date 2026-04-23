@@ -715,7 +715,7 @@ function setBarbarianPosition(position) {
   if (!state.turns.length) {
     renderStartEventState();
   } else if (state.lastEventView && state.lastEventView.eventKey === 'barbarians' && state.barbarianTracking) {
-    state.lastEventView.image = imageUrl(`barbarians${position}.png`);
+    state.lastEventView.image = imageUrl(`barbarians${position}.jpg`);
     renderEventState(state.lastEventView);
   }
   renderHistoryModal();
@@ -1302,12 +1302,12 @@ function makeEventView(turn) {
   let img = '';
   if (isBarbarians) {
     if (state.barbarianTracking) {
-      img = imageUrl(`barbarians${turn.barbarianPositionAfter}.png`);
+      img = imageUrl(`barbarians${turn.barbarianPositionAfter}.jpg`);
     } else {
       img = imageUrl('barbarians.svg');
     }
   } else {
-    img = imageUrl(`${event.imgBase}${turn.d2}.png`);
+    img = imageUrl(`${event.imgBase}${turn.d2}.jpg`);
   }
 
   return {
@@ -1348,8 +1348,8 @@ function renderStartEventState() {
   if (state.barbarianTracking) {
     const uiColor = eventUiColor('barbarians', EVENT_DEFS.barbarians.color);
     imgEl.src = state.barbarianPosition > 0
-      ? imageUrl(`barbarians${state.barbarianPosition}.png`)
-      : imageUrl('barbarians1_start.png');
+      ? imageUrl(`barbarians${state.barbarianPosition}.jpg`)
+      : imageUrl('barbarians1_start.jpg');
     imgEl.classList.add('shown');
     document.getElementById('event-placeholder').classList.add('hidden');
     document.getElementById('event-name').textContent = t('ev_barbarians_display');
