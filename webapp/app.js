@@ -75,6 +75,14 @@ const EVENT_UI_COLORS_LIGHT = {
   barbarians: '#7D1111',
 };
 
+const PRELOAD_IMAGE_NAMES = [
+  ...['Yellow', 'Blue', 'Green'].flatMap(base =>
+    Array.from({ length: 6 }, (_, idx) => `${base}${idx + 1}.jpg`)
+  ),
+  'barbarians1_start.jpg',
+  ...Array.from({ length: 7 }, (_, idx) => `barbarians${idx + 1}.jpg`),
+];
+
 const DICE_SIZE = (() => {
   const w = Math.min(window.innerWidth, 520) - 24;
   const side = Math.min(124, Math.max(78, Math.floor(w * 0.24)));
@@ -377,6 +385,8 @@ const state = {
   cueTimeout: null,
   lastAnimatedTurnId: '',
   clockOffsetMs: 0,
+  preloadedImages: [],
+  imagePreloadPromise: null,
 };
 
 function defaultSyncBase() {
@@ -389,6 +399,31 @@ function getApiBase() {
 
 function imageUrl(name) {
   return new URL(`images/${name}`, document.baseURI).href;
+}
+
+function preloadImage(name) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = imageUrl(name);
+
+    const finalize = () => resolve(img);
+    img.onload = finalize;
+    img.onerror = finalize;
+  });
+}
+
+function preloadEventImages() {
+  if (state.imagePreloadPromise) return state.imagePreloadPromise;
+  state.imagePreloadPromise = Promise.allSettled(
+    PRELOAD_IMAGE_NAMES.map(preloadImage)
+  ).then(results => {
+    state.preloadedImages = results
+      .filter(result => result.status === 'fulfilled')
+      .map(result => result.value);
+    return state.preloadedImages;
+  });
+  return state.imagePreloadPromise;
 }
 
 function showToast(message) {
@@ -1787,6 +1822,8 @@ function bindModalClose(modalId, closeBtnId) {
 }
 
 function init() {
+  preloadEventImages().catch(() => {});
+
   ['die1', 'die2'].forEach(id => {
     const canvas = document.getElementById(id);
     canvas.width = DICE_SIZE;
