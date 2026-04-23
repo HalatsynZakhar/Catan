@@ -77,10 +77,10 @@ const EVENT_UI_COLORS_LIGHT = {
 
 const PRELOAD_IMAGE_NAMES = [
   ...['Yellow', 'Blue', 'Green'].flatMap(base =>
-    Array.from({ length: 6 }, (_, idx) => `${base}${idx + 1}.jpg`)
+    Array.from({ length: 6 }, (_, idx) => `${base}${idx + 1}.png`)
   ),
-  'barbarians1_start.jpg',
-  ...Array.from({ length: 7 }, (_, idx) => `barbarians${idx + 1}.jpg`),
+  'barbarians1_start.png',
+  ...Array.from({ length: 7 }, (_, idx) => `barbarians${idx + 1}.png`),
 ];
 
 const DICE_SIZE = (() => {
@@ -750,7 +750,7 @@ function setBarbarianPosition(position) {
   if (!state.turns.length) {
     renderStartEventState();
   } else if (state.lastEventView && state.lastEventView.eventKey === 'barbarians' && state.barbarianTracking) {
-    state.lastEventView.image = imageUrl(`barbarians${position}.jpg`);
+    state.lastEventView.image = imageUrl(`barbarians${position}.png`);
     renderEventState(state.lastEventView);
   }
   renderHistoryModal();
@@ -1337,12 +1337,12 @@ function makeEventView(turn) {
   let img = '';
   if (isBarbarians) {
     if (state.barbarianTracking) {
-      img = imageUrl(`barbarians${turn.barbarianPositionAfter}.jpg`);
+      img = imageUrl(`barbarians${turn.barbarianPositionAfter}.png`);
     } else {
       img = imageUrl('barbarians.svg');
     }
   } else {
-    img = imageUrl(`${event.imgBase}${turn.d2}.jpg`);
+    img = imageUrl(`${event.imgBase}${turn.d2}.png`);
   }
 
   return {
@@ -1383,8 +1383,8 @@ function renderStartEventState() {
   if (state.barbarianTracking) {
     const uiColor = eventUiColor('barbarians', EVENT_DEFS.barbarians.color);
     imgEl.src = state.barbarianPosition > 0
-      ? imageUrl(`barbarians${state.barbarianPosition}.jpg`)
-      : imageUrl('barbarians1_start.jpg');
+      ? imageUrl(`barbarians${state.barbarianPosition}.png`)
+      : imageUrl('barbarians1_start.png');
     imgEl.classList.add('shown');
     document.getElementById('event-placeholder').classList.add('hidden');
     document.getElementById('event-name').textContent = t('ev_barbarians_display');
