@@ -6,7 +6,9 @@
       "Bash(git -C C:\\\\Users\\\\zakhar\\\\PycharmProject\\\\catan status)",
       "Bash(git -C \"C:/Users/zakhar/PycharmProject/catan\" status)",
       "Bash(npm install *)",
-      "Bash(node scripts/convert-to-webp.mjs)"
+      "Bash(node scripts/convert-to-webp.mjs)",
+      "Bash(rm C:/Users/User/PycharmProjects/Catan/webapp/public/images/*.png)",
+      "Bash(rm C:/Users/User/PycharmProjects/Catan/webapp/dist/images/*.png)"
     ]
   }
 }
