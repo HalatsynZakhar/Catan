@@ -77,10 +77,10 @@ const EVENT_UI_COLORS_LIGHT = {
 
 const PRELOAD_IMAGE_NAMES = [
   ...['Yellow', 'Blue', 'Green'].flatMap(base =>
-    Array.from({ length: 6 }, (_, idx) => `${base}${idx + 1}.png`)
+    Array.from({ length: 6 }, (_, idx) => `${base}${idx + 1}.webp`)
   ),
-  'barbarians1_start.png',
-  ...Array.from({ length: 7 }, (_, idx) => `barbarians${idx + 1}.png`),
+  'barbarians1_start.webp',
+  ...Array.from({ length: 7 }, (_, idx) => `barbarians${idx + 1}.webp`),
 ];
 
 const DICE_SIZE = (() => {
@@ -750,7 +750,7 @@ function setBarbarianPosition(position) {
   if (!state.turns.length) {
     renderStartEventState();
   } else if (state.lastEventView && state.lastEventView.eventKey === 'barbarians' && state.barbarianTracking) {
-    state.lastEventView.image = imageUrl(`barbarians${position}.png`);
+    state.lastEventView.image = imageUrl(`barbarians${position}.webp`);
     renderEventState(state.lastEventView);
   }
   renderHistoryModal();
@@ -1337,12 +1337,12 @@ function makeEventView(turn) {
   let img = '';
   if (isBarbarians) {
     if (state.barbarianTracking) {
-      img = imageUrl(`barbarians${turn.barbarianPositionAfter}.png`);
+      img = imageUrl(`barbarians${turn.barbarianPositionAfter}.webp`);
     } else {
       img = imageUrl('barbarians.svg');
     }
   } else {
-    img = imageUrl(`${event.imgBase}${turn.d2}.png`);
+    img = imageUrl(`${event.imgBase}${turn.d2}.webp`);
   }
 
   return {
@@ -1383,8 +1383,8 @@ function renderStartEventState() {
   if (state.barbarianTracking) {
     const uiColor = eventUiColor('barbarians', EVENT_DEFS.barbarians.color);
     imgEl.src = state.barbarianPosition > 0
-      ? imageUrl(`barbarians${state.barbarianPosition}.png`)
-      : imageUrl('barbarians1_start.png');
+      ? imageUrl(`barbarians${state.barbarianPosition}.webp`)
+      : imageUrl('barbarians1_start.webp');
     imgEl.classList.add('shown');
     document.getElementById('event-placeholder').classList.add('hidden');
     document.getElementById('event-name').textContent = t('ev_barbarians_display');

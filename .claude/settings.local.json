@@ -4,7 +4,9 @@
       "Bash(npm run *)",
       "Bash(npx wrangler *)",
       "Bash(git -C C:\\\\Users\\\\zakhar\\\\PycharmProject\\\\catan status)",
-      "Bash(git -C \"C:/Users/zakhar/PycharmProject/catan\" status)"
+      "Bash(git -C \"C:/Users/zakhar/PycharmProject/catan\" status)",
+      "Bash(npm install *)",
+      "Bash(node scripts/convert-to-webp.mjs)"
     ]
   }
 }

@@ -13,11 +13,15 @@ const MIME = {
   '.js': 'application/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.png': 'image/png',
+  '.webp': 'image/webp',
   '.svg': 'image/svg+xml',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.json': 'application/json; charset=utf-8',
 };
+
+const STATIC_EXTS = new Set(['.png', '.webp', '.svg', '.jpg', '.jpeg']);
+const HASHED_PATH_RE = /\/assets\//;
 
 function sendJson(res, status, payload) {
   res.writeHead(status, {
@@ -40,12 +44,32 @@ function sendEmpty(res, status = 204) {
   res.end();
 }
 
-function sendFile(res, filePath) {
+function sendFile(res, filePath, req) {
   const ext = path.extname(filePath).toLowerCase();
   const type = MIME[ext] || 'application/octet-stream';
+
+  let stat;
+  try { stat = fs.statSync(filePath); } catch { sendJson(res, 404, { error: 'not-found' }); return; }
+
+  const etag = `"${stat.size}-${stat.mtimeMs}"`;
+  let cacheControl;
+  if (ext === '.html') {
+    cacheControl = 'no-cache';
+  } else if (STATIC_EXTS.has(ext) || HASHED_PATH_RE.test(filePath)) {
+    cacheControl = 'public, max-age=31536000, immutable';
+  } else {
+    cacheControl = 'no-cache';
+  }
+
+  if (req && req.headers['if-none-match'] === etag) {
+    res.writeHead(304, { 'Cache-Control': cacheControl, 'ETag': etag });
+    res.end();
+    return;
+  }
+
   const stream = fs.createReadStream(filePath);
   stream.on('error', () => sendJson(res, 404, { error: 'not-found' }));
-  res.writeHead(200, { 'Content-Type': type });
+  res.writeHead(200, { 'Content-Type': type, 'Cache-Control': cacheControl, 'ETag': etag });
   stream.pipe(res);
 }
 
@@ -188,13 +212,13 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-      sendFile(res, filePath);
+      sendFile(res, filePath, req);
       return;
     }
 
     filePath = path.join(DIST_DIR, 'index.html');
     if (fs.existsSync(filePath)) {
-      sendFile(res, filePath);
+      sendFile(res, filePath, req);
       return;
     }
 
